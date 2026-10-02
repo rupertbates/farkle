@@ -344,6 +344,25 @@ body {
   .held-rail {
     flex-basis: auto;
   }
+
+  /* On mobile the held rail used to lay out one full-width block per held roll,
+   * which could easily push the roll/bank buttons below the fold on a turn with
+   * several rolls. Let groups sit side-by-side instead, wrapping only once a row
+   * actually runs out of width, so the tray grows across before it grows down. */
+  .held-rail__scroll {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+  }
+
+  .held-rail__scroll h4,
+  .held-rail__empty {
+    flex-basis: 100%;
+  }
+
+  .held-rail__group {
+    flex: 0 0 auto;
+  }
 }
 
 .held-rail h4 {
