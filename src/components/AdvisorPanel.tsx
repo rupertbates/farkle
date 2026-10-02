@@ -73,7 +73,7 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
         <p className="advisor__win-callout">🏆 Banking now would reach the target score - take the win!</p>
       )}
       <div className="advisor__best">
-        <p className="advisor__best-heading">{isComputerMode ? 'Best option on average' : 'Recommendation'}</p>
+        {isComputerMode && <p className="advisor__best-heading">Best option on average</p>}
         <p className="advisor__best-label">{renderLabel(best.candidate.label)}</p>
         {best.isHotDice && <p className="advisor__hot-dice-tag">🔥 This selection uses all six dice - Hot Dice! You'll get a fresh six to roll.</p>}
         {!(best.recommendedAction === 'continue' && best.candidate.label.includes('reroll the rest')) && (
