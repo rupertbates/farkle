@@ -177,9 +177,17 @@ export default function App() {
                   <>
                     {/* The valid case ("Held dice score N pts") is redundant now that the
                      * held rail's footer and the button labels below both already show the
-                     * score - only the invalid case earns its place, explaining why rolling
-                     * or banking is currently blocked. */}
-                    {!selectionValidity.valid && <p className="selection-status">{selectionValidity.reason}</p>}
+                     * score, so only the invalid case has real text. The paragraph still
+                     * always renders (just visually hidden) so its line of space stays
+                     * reserved - otherwise the buttons below jump up/down as this message
+                     * appears and disappears while toggling dice. */}
+                    <p
+                      className="selection-status"
+                      aria-hidden={selectionValidity.valid}
+                      style={selectionValidity.valid ? { visibility: 'hidden' } : undefined}
+                    >
+                      {selectionValidity.valid ? '\u00A0' : selectionValidity.reason}
+                    </p>
                     <div className="controls__row">
                       <button
                         type="button"
