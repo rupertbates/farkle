@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { DieValue } from '../game';
+import { findBestSelection } from '../game';
 import { Die } from './Die';
 
 export interface GameBoardProps {
@@ -72,6 +73,11 @@ export function GameBoard({ dice, selectedIndices, rollId, interactive, onToggle
     .map((value, index) => ({ value, index }))
     .filter(({ index }) => !selectedIndices.includes(index));
 
+  // Dice that can't contribute to any valid combo this roll (e.g. a lone 2, 3, 4 or 6)
+  // should be inert - clicking them can never produce a valid selection, so there's no
+  // point letting the player "hold" one only to find out later it doesn't score.
+  const nonScoringIndices = useMemo(() => new Set(findBestSelection(dice).remainingIndices), [dice]);
+
   return (
     <div className="board">
       <div className="board__felt">
@@ -94,7 +100,12 @@ export function GameBoard({ dice, selectedIndices, rollId, interactive, onToggle
               exit={{ opacity: 0, scale: 0.6 }}
               transition={{ type: 'spring', stiffness: 260, damping: 18, delay: index * 0.05 }}
             >
-              <Die value={value} selected={false} disabled={!interactive} onClick={() => onToggle(index)} />
+              <Die
+                value={value}
+                selected={false}
+                disabled={!interactive || nonScoringIndices.has(index)}
+                onClick={() => onToggle(index)}
+              />
             </motion.div>
           );
         })}
