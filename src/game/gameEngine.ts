@@ -53,12 +53,16 @@ export function rollForTurn(turn: TurnState, rng?: () => number): TurnState {
       dice,
       selectedIndices: [],
       rollId,
+      isHotDice: false,
       phase: 'farkled',
       log: [...log, 'Farkle! No scoring dice. Turn points are lost.'],
     };
   }
 
-  return { ...turn, dice, selectedIndices: [], rollId, phase: 'awaiting-selection', log };
+  // The hot-dice bonus applies only to the roll it triggered; once that roll has
+  // happened, clear the flag so the "Hot dice!" banner doesn't linger and get
+  // mistaken for a claim about this new roll's results.
+  return { ...turn, dice, selectedIndices: [], rollId, isHotDice: false, phase: 'awaiting-selection', log };
 }
 
 /** Toggles whether a rolled die (by index) is part of the current selection. */
