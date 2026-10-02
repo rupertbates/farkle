@@ -413,6 +413,27 @@ body {
   justify-content: center;
 }
 
+/* A small status banner (e.g. "Hot dice!") pinned to the top of the felt, mirroring
+ * the controls bar pinned to the bottom. `GameBoard` compresses the dice grid into
+ * the remaining space below it so a die never scatters underneath it. */
+.board__top-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 2;
+  padding: calc(0.5rem + env(safe-area-inset-top, 0px)) 1rem 0.6rem;
+  border-radius: 0.7rem 0.7rem 0 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(4, 12, 8, 0.88) 0%,
+    rgba(4, 12, 8, 0.62) 60%,
+    rgba(4, 12, 8, 0) 100%
+  );
+  display: flex;
+  justify-content: center;
+}
+
 /* The end-of-turn (Farkle / banked) message pops over the board itself instead of
  * sitting in a block below it - the darkened backdrop keeps the card readable even
  * though it's fine for it to cover any dice still showing underneath. */
@@ -851,12 +872,15 @@ body {
 }
 
 .hot-dice-banner {
-  background: rgba(250, 204, 21, 0.15);
+  background: rgba(250, 204, 21, 0.18);
   border: 1px solid var(--gold);
   border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  margin: 1rem 0;
+  padding: 0.35rem 0.75rem;
+  margin: 0;
   font-weight: 600;
+  font-size: 0.8rem;
+  text-align: center;
+  max-width: 100%;
 }
 
 .hot-dice-banner p {

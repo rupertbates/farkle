@@ -68,6 +68,12 @@ export interface TurnState {
   diceToRoll: number;
   /** True if the player just scored with every die and earns a fresh set of 6 ("hot dice"). */
   isHotDice: boolean;
+  /** True for the one roll immediately after a hot-dice reroll - i.e. the fresh set of
+   *  dice that resulted from scoring with every die last time. Used to show the "Hot
+   *  dice!" banner once those dice actually land on the board (rather than earlier,
+   *  while the prior roll's scoring dice are still being moved into the held rail).
+   *  Cleared by the next roll, whatever its outcome. */
+  hotDiceReroll: boolean;
   /** Groups of dice already locked in this turn (one entry per roll that was locked), shown set aside at the board's edge. */
   heldGroups: DieValue[][];
   /** Increments on every roll so the UI can key/animate a fresh throw. */

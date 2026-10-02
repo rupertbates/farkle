@@ -182,6 +182,20 @@ export default function App() {
     );
   }
 
+  // The hot-dice banner now lives as a small overlay pinned to the top of the board
+  // felt (mirroring the Roll/Bank controls pinned to the bottom), and is tied to
+  // `hotDiceReroll` rather than `isHotDice` - so it appears once the fresh 6 dice it
+  // earned have actually landed on the board, not earlier while the prior roll's
+  // dice are still animating into the held rail.
+  let topOverlay: ReactNode = null;
+  if (turn.phase === 'awaiting-selection' && turn.hotDiceReroll) {
+    topOverlay = (
+      <div className="hot-dice-banner">
+        <p>🔥 Hot dice! All 6 dice scored - fresh set, your turn score is safe.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="app__header">
@@ -222,6 +236,7 @@ export default function App() {
                 onToggle={actions.toggleDie}
                 showInitialPlaceholder={!hasRolledOnce}
                 controlsOverlay={controlsOverlay}
+                topOverlay={topOverlay}
                 popover={popoverContent}
               />
               <HeldDiceRail
@@ -234,12 +249,6 @@ export default function App() {
                 turnScore={turn.turnScore}
               />
             </div>
-
-            {turn.isHotDice && turn.phase !== 'farkled' && (
-              <div className="hot-dice-banner">
-                <p>🔥 Hot dice! All 6 dice scored, so you get a fresh set of 6 to roll - your turn score is safe.</p>
-              </div>
-            )}
 
             {!isHumanTurn && !isGameOver && turn.phase !== 'farkled' && turn.phase !== 'turn-banked' && (
               <p className="computer-status">{computerStatus}</p>

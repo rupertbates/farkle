@@ -21,6 +21,7 @@ function emptyTurn(playerId: PlayerId): TurnState {
     turnScore: 0,
     diceToRoll: 6,
     isHotDice: false,
+    hotDiceReroll: false,
     heldGroups: [],
     rollId: 0,
     phase: 'awaiting-roll',
@@ -56,6 +57,7 @@ export function rollForTurn(turn: TurnState, rng?: () => number): TurnState {
       committedIndices: [],
       rollId,
       isHotDice: false,
+      hotDiceReroll: false,
       phase: 'farkled',
       log: [...log, 'Farkle! No scoring dice. Turn points are lost.'],
     };
@@ -63,8 +65,21 @@ export function rollForTurn(turn: TurnState, rng?: () => number): TurnState {
 
   // The hot-dice bonus applies only to the roll it triggered; once that roll has
   // happened, clear the flag so the "Hot dice!" banner doesn't linger and get
-  // mistaken for a claim about this new roll's results.
-  return { ...turn, dice, selectedIndices: [], committedIndices: [], rollId, isHotDice: false, phase: 'awaiting-selection', log };
+  // mistaken for a claim about this new roll's results. `hotDiceReroll` instead
+  // flags *this* fresh roll - it's the one the hot dice earned - so the banner can
+  // be shown once these dice are actually on the board, not back when the prior
+  // roll's scoring dice were merely being moved into the held rail.
+  return {
+    ...turn,
+    dice,
+    selectedIndices: [],
+    committedIndices: [],
+    rollId,
+    isHotDice: false,
+    hotDiceReroll: turn.isHotDice,
+    phase: 'awaiting-selection',
+    log,
+  };
 }
 
 /** Toggles whether a rolled die (by index) is part of the current selection. */
