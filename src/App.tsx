@@ -96,14 +96,21 @@ export default function App() {
   if (isHumanTurn && turn.phase === 'awaiting-roll') {
     controlsOverlay = (
       <div className="controls">
-        <button type="button" className="btn btn--primary" onClick={actions.roll}>
-          {turn.isHotDice ? `🔥 Roll ${turn.diceToRoll} dice (Hot Dice!)` : `Roll ${turn.diceToRoll} dice`}
-        </button>
-        {turn.turnScore > 0 && (
-          <button type="button" className="btn btn--bank" disabled={!canBank} onClick={actions.bank}>
-            Bank {turn.turnScore} pts & end turn
+        <div className="controls__row">
+          <button type="button" className="btn btn--primary" onClick={actions.roll}>
+            <span className="btn__roll-full">
+              {turn.isHotDice ? `🔥 Roll ${turn.diceToRoll} dice (Hot Dice!)` : `Roll ${turn.diceToRoll} dice`}
+            </span>
+            <span className="btn__roll-short">{turn.isHotDice ? '🔥 Roll' : 'Roll'}</span>
           </button>
-        )}
+          {turn.turnScore > 0 && (
+            <button type="button" className="btn btn--bank" disabled={!canBank} onClick={actions.bank}>
+              <span className="btn__bank-full">Bank {turn.turnScore} pts & end turn</span>
+              <span className="btn__bank-short">Bank & end turn</span>
+              <span className="btn__bank-xs">Bank</span>
+            </button>
+          )}
+        </div>
       </div>
     );
   } else if (isHumanTurn && turn.phase === 'awaiting-selection') {
@@ -132,6 +139,7 @@ export default function App() {
               Bank {turn.turnScore + (selectionValidity.valid ? selectionValidity.score : 0)} pts & end turn
             </span>
             <span className="btn__bank-short">Bank & end turn</span>
+            <span className="btn__bank-xs">Bank</span>
           </button>
         </div>
       </div>

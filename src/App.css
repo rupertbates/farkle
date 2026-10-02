@@ -312,9 +312,12 @@ body {
 
   /* The outer page padding, header, and the gaps around the board itself all add up
    * fast on a short phone screen - trim them too so the board and as much of the
-   * advisor below it as possible can fit without scrolling. */
+   * advisor below it as possible can fit without scrolling. Horizontal padding is
+   * kept minimal (rather than matching desktop's generous gutter) since every panel
+   * already has its own internal padding - stacking both wastes width better spent
+   * on the board/buttons on a narrow phone. */
   .app {
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem 0.5rem;
   }
 
   .app__header {
@@ -744,30 +747,36 @@ body {
 }
 
 /* The roll/bank buttons need to fit side-by-side on narrow phones without wrapping.
- * Each carries full/short text variants swapped by breakpoint instead of wrapping onto
- * a second line - the bank button (the longer label) shortens first; the roll button
- * only needs to shorten further on very small screens. */
+ * Both swap to their short label at the same breakpoint (rather than staggered) -
+ * mobile's reserved overlay width is narrow enough that both the full "Roll N dice"
+ * and "Bank N pts & end turn" labels together wrap well before 480px, even though
+ * either alone would still fit. Below 360px even the short "Bank & end turn" label
+ * is too wide alongside "Roll" - the turn/held-tray panels already show the score,
+ * so the button can shrink to just "Bank" there without losing information. */
 .btn__roll-short,
-.btn__bank-short {
+.btn__bank-short,
+.btn__bank-xs {
   display: none;
 }
 
 @media (max-width: 480px) {
+  .btn__roll-full,
   .btn__bank-full {
     display: none;
   }
 
+  .btn__roll-short,
   .btn__bank-short {
     display: inline;
   }
 }
 
-@media (max-width: 380px) {
-  .btn__roll-full {
+@media (max-width: 360px) {
+  .btn__bank-short {
     display: none;
   }
 
-  .btn__roll-short {
+  .btn__bank-xs {
     display: inline;
   }
 }
