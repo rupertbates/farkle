@@ -555,6 +555,15 @@ body {
   font-weight: 600;
 }
 
+/* The raw dice-value list (e.g. "(1, 5, 5)") is useful detail but visually noisy next
+ * to the headline recommendation text, so it's de-emphasized: smaller, lighter, and not
+ * bold even inside the otherwise bold recommendation label. */
+.advisor__dice-detail {
+  font-size: 0.8em;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
 .advisor__best-action {
   margin: 0 0 0.5rem;
 }
@@ -580,6 +589,12 @@ body {
   padding: 0.5rem 0.8rem;
   cursor: pointer;
   font-weight: 600;
+}
+
+/* Extra breathing room above the primary apply button specifically (not the compact
+ * "Select instead" buttons, which sit inline within a flex row and shouldn't shift). */
+.advisor__best > .advisor__apply-btn {
+  margin-top: 1rem;
 }
 
 .advisor__apply-btn--secondary {

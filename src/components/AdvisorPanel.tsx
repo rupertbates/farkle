@@ -14,6 +14,24 @@ export interface AdvisorPanelProps {
   computerDecision?: ComputerDecision | null;
 }
 
+/**
+ * Candidate labels like "Take all scoring dice (1, 5, 5) for 1,100 pts" embed a raw
+ * dice-value list in parentheses. It's useful detail but reads as visual noise next to
+ * the headline recommendation, so it's rendered smaller/dimmer than the surrounding text.
+ */
+function renderLabel(label: string) {
+  const match = label.match(/^(.*?)(\([^)]*\))(.*)$/);
+  if (!match) return label;
+  const [, before, diceList, after] = match;
+  return (
+    <>
+      {before}
+      <span className="advisor__dice-detail">{diceList}</span>
+      {after}
+    </>
+  );
+}
+
 /** Shows the advisor's recommended dice selection(s) with expected-value reasoning and probabilities. */
 export function AdvisorPanel({ report, onApplySelection, mode = 'human', computerDecision }: AdvisorPanelProps) {
   const isComputerMode = mode === 'computer';
@@ -57,7 +75,7 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
         <p className="advisor__win-callout">🏆 Banking now would reach the target score - take the win!</p>
       )}
       <div className="advisor__best">
-        <p className="advisor__best-label">{isComputerMode ? 'Best option on average: ' : 'Recommended: '}{best.candidate.label}</p>
+        <p className="advisor__best-label">{isComputerMode ? 'Best option on average: ' : 'Recommended: '}{renderLabel(best.candidate.label)}</p>
         {best.isHotDice && <p className="advisor__hot-dice-tag">🔥 This selection uses all six dice - Hot Dice! You'll get a fresh six to roll.</p>}
         {!(best.recommendedAction === 'continue' && best.candidate.label.includes('reroll the rest')) && (
           <p className="advisor__best-action">
@@ -104,7 +122,7 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
                   <span className="advisor__option-compact-label">
                     {/* The "take all" label already states its own dice and score, unlike the
                      * "keep some, reroll the rest" labels which don't repeat the score. */}
-                    {opt.candidate.label}
+                    {renderLabel(opt.candidate.label)}
                     {!opt.candidate.label.includes(' pts') && ` - ${opt.candidate.result.score} pts`}
                     {' '}
                     {opt.isHotDice && <span className="advisor__hot-dice-badge">🔥</span>}
