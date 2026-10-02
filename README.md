@@ -7,6 +7,9 @@ value of banking vs. continuing - with a plain-English explanation for each.
 The computer opponent uses the same advisor engine to play and explain its
 own decisions.
 
+**Live demo:** https://rupertbates.github.io/farkle/ (deployed automatically
+from `main` via GitHub Actions - see [Deployment](#deployment)).
+
 ## Rules implemented
 
 - First to **10,000** points wins.
@@ -78,6 +81,20 @@ pnpm test     # run the vitest suite (unit + integration tests)
 pnpm build    # typecheck + production build
 pnpm lint     # oxlint
 ```
+
+## Deployment
+
+The app is a static single-page build with no backend, so it's hosted for
+free on **GitHub Pages**. `.github/workflows/deploy-pages.yml` builds and
+deploys the `main` branch automatically on every push (and can be triggered
+manually via `workflow_dispatch`), publishing to
+https://rupertbates.github.io/farkle/.
+
+Because GitHub Pages serves a project site from a `/<repo-name>/` subpath
+rather than the domain root, `vite.config.ts` sets `base: '/farkle/'` only
+when the `GITHUB_PAGES=true` env var is set (as the workflow does) - a plain
+local `pnpm build` still serves from `/`, so this doesn't affect normal
+development.
 
 ## Project structure
 
