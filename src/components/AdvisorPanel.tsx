@@ -57,7 +57,7 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
         <p className="advisor__win-callout">🏆 Banking now would reach the target score - take the win!</p>
       )}
       <div className="advisor__best">
-        <p className="advisor__best-label">{isComputerMode ? 'Best EV option: ' : 'Recommended: '}{best.candidate.label}</p>
+        <p className="advisor__best-label">{isComputerMode ? 'Best option on average: ' : 'Recommended: '}{best.candidate.label}</p>
         {best.isHotDice && <p className="advisor__hot-dice-tag">🔥 This selection uses all six dice - Hot Dice! You'll get a fresh six to roll.</p>}
         {!(best.recommendedAction === 'continue' && best.candidate.label.includes('reroll the rest')) && (
           <p className="advisor__best-action">
@@ -66,10 +66,10 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
         )}
         <div className="advisor__ev-row">
           <span className={best.recommendedAction === 'bank' ? 'advisor__ev--chosen' : ''}>
-            Bank: EV {Math.round(best.bank.expectedValue).toLocaleString()}
+            Bank now: {Math.round(best.bank.expectedValue).toLocaleString()} pts (certain)
           </span>
           <span className={best.recommendedAction === 'continue' ? 'advisor__ev--chosen' : ''}>
-            Continue ({numberWord(best.diceRemainingIfContinuing)} dice): EV {Math.round(best.continue.expectedValue).toLocaleString()}
+            Keep rolling ({numberWord(best.diceRemainingIfContinuing)} dice): ~{Math.round(best.continue.expectedValue).toLocaleString()} pts on average
           </span>
         </div>
         <p className="advisor__farkle-prob">
@@ -115,11 +115,11 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
                 </div>
                 <p className="advisor__option-compact-stats">
                   <span className={opt.recommendedAction === 'bank' ? 'advisor__ev--chosen' : ''}>
-                    Bank: EV {Math.round(opt.bank.expectedValue).toLocaleString()}
+                    Bank: {Math.round(opt.bank.expectedValue).toLocaleString()} pts
                   </span>
                   {' · '}
                   <span className={opt.recommendedAction === 'continue' ? 'advisor__ev--chosen' : ''}>
-                    Continue ({numberWord(opt.diceRemainingIfContinuing)} dice): EV {Math.round(opt.continue.expectedValue).toLocaleString()}
+                    Keep rolling ({numberWord(opt.diceRemainingIfContinuing)} dice): ~{Math.round(opt.continue.expectedValue).toLocaleString()} pts avg
                   </span>
                   {' · '}
                   <span className="advisor__farkle-prob advisor__farkle-prob--inline">
