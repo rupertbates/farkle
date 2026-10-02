@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { DEFAULT_TARGET_SCORE } from './game';
+import type { AdvisorReport, ComputerDecision } from './game';
 import { useFarkleGame } from './hooks/useFarkleGame';
 import { GameBoard } from './components/GameBoard';
 import { HeldDiceRail } from './components/HeldDiceRail';
@@ -53,6 +54,30 @@ export default function App() {
   );
 
   const { turn, players, winnerId } = game;
+
+  // Keeps the computer's last revealed decision/reasoning visible in the "Computer's
+  // analysis" panel through the farkled/turn-banked review pause at the end of its
+  // turn (when `advisorReport`/`computerDecision` have already gone back to null)
+  // instead of swapping to the "Advice appears here…" placeholder. Derived during
+  // render (like `hasRolledOnce` above) rather than via an effect, so it updates in
+  // the same render the decision/turn change arrives instead of one render later.
+  // It's only cleared once the human's own turn actually starts rolling, at which
+  // point the panel switches over to the live advisor for their roll anyway.
+  const [frozenComputerView, setFrozenComputerView] = useState<{
+    report: AdvisorReport;
+    decision: ComputerDecision;
+  } | null>(null);
+  if (
+    !isHumanTurn &&
+    turn.phase === 'awaiting-selection' &&
+    advisorReport &&
+    computerDecision &&
+    frozenComputerView?.decision !== computerDecision
+  ) {
+    setFrozenComputerView({ report: advisorReport, decision: computerDecision });
+  } else if (isHumanTurn && frozenComputerView) {
+    setFrozenComputerView(null);
+  }
 
   // Derived during render (not an effect) so the flag flips in the same render the first
   // roll's dice arrive, instead of one render later.
@@ -268,6 +293,13 @@ export default function App() {
                     onApplySelection={actions.applyAdvisorSelection}
                     mode={isHumanTurn ? 'human' : 'computer'}
                     computerDecision={computerDecision}
+                  />
+                ) : !isHumanTurn && frozenComputerView ? (
+                  <AdvisorPanel
+                    report={frozenComputerView.report}
+                    onApplySelection={actions.applyAdvisorSelection}
+                    mode="computer"
+                    computerDecision={frozenComputerView.decision}
                   />
                 ) : (
                   <div className="advisor advisor--empty">
