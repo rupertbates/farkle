@@ -3,15 +3,14 @@ export interface TurnLogProps {
 }
 
 export function TurnLog({ log }: TurnLogProps) {
-  if (log.length === 0) return null;
+  if (log.length === 0) {
+    return <p className="turn-log__placeholder">Events from this turn (rolls, holds, banking) will appear here.</p>;
+  }
   return (
-    <div className="turn-log">
-      <h4>This turn</h4>
-      <ul>
-        {log.map((entry, i) => (
-          <li key={i}>{entry}</li>
-        ))}
-      </ul>
-    </div>
+    <ul className="turn-log">
+      {log.map((entry, i) => (
+        <li key={i}>{entry}</li>
+      ))}
+    </ul>
   );
 }

@@ -209,11 +209,11 @@ export default function App() {
               </CollapsiblePanel>
             </section>
 
-            {turn.log.length > 0 && (
-              <section className="panel panel--turnlog">
+            <section className="panel panel--turnlog">
+              <CollapsiblePanel title="📜 This turn" storageKey="farkle:panel:turnlog-open" defaultOpen={true}>
                 <TurnLog log={turn.log} />
-              </section>
-            )}
+              </CollapsiblePanel>
+            </section>
 
             <section className="panel panel--scoring">
               <CollapsiblePanel title="📖 Scoring guide" storageKey="farkle:panel:scoring-open" defaultOpen={false}>
