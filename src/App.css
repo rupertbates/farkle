@@ -595,6 +595,21 @@ body {
   border-radius: 20%;
 }
 
+/* Dice take up a lot of the already-tight mobile viewport (five/six at 44px each
+ * easily overlap or crowd the board). Drop both sizes ~18% on small screens - still
+ * comfortably tappable, but leaves more breathing room on the felt and in the tray. */
+@media (max-width: 640px) {
+  .die--lg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .die--sm {
+    width: 23px;
+    height: 23px;
+  }
+}
+
 .die:disabled {
   cursor: default;
   opacity: 0.85;
