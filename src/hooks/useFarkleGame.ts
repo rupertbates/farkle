@@ -149,6 +149,26 @@ export function useFarkleGame(
     setGame(resetGame(targetScore));
   }, [targetScore]);
 
+  // Auto-rolls the human's very first throw of a fresh game (including after
+  // clicking "New Game") so play starts immediately instead of requiring an extra
+  // click on "Roll" before anything's even on the board. This state - the human's
+  // turn, awaiting-roll, with no dice yet - only ever occurs here: every other way a
+  // turn reaches `awaiting-roll` either already has that roll's dice (mid-turn,
+  // after committing a partial selection) or is immediately re-rolled for hot dice /
+  // via `continueTurn` in the same update, so it's never visible as its own state.
+  useEffect(() => {
+    if (game.turn.playerId !== 'human' || game.turn.phase !== 'awaiting-roll' || game.turn.dice.length !== 0) {
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      setGame((g) => {
+        if (g.turn.playerId !== 'human' || g.turn.phase !== 'awaiting-roll' || g.turn.dice.length !== 0) return g;
+        return { ...g, turn: rollForTurn(g.turn, debugRng) };
+      });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [game.turn.playerId, game.turn.phase, game.turn.dice.length, debugRng]);
+
   // After the human locks in a selection that scores with all 6 dice ("hot dice"),
   // the turn pauses briefly at `awaiting-roll` just long enough to flash the "Hot
   // dice!" banner (same `rollForTurn` always clears `isHotDice` the instant it
