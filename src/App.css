@@ -17,6 +17,15 @@
   --gold: #facc15;
 }
 
+/* Reserves space for the vertical scrollbar at all times (even on the rare screen/state
+ * where content is short enough not to need one), so a browser that shows a classic,
+ * width-taking scrollbar - rather than a floating overlay one - never toggles the page's
+ * available width on and off as content grows past the fold. Without this, that toggle
+ * shifts everything horizontally by the scrollbar's width, reading as a layout "jump". */
+html {
+  scrollbar-gutter: stable;
+}
+
 * {
   box-sizing: border-box;
 }
