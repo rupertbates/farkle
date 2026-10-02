@@ -10,10 +10,42 @@ import { CollapsiblePanel } from './components/CollapsiblePanel';
 import { TurnLog } from './components/TurnLog';
 import './App.css';
 
+const PAUSE_AFTER_COMPUTER_TURN_KEY = 'farkle:setting:pause-after-computer-turn';
+
+function readStoredBoolean(key: string, defaultValue: boolean): boolean {
+  try {
+    const stored = window.localStorage.getItem(key);
+    return stored === null ? defaultValue : stored === 'true';
+  } catch {
+    // localStorage can throw in some privacy modes/environments - just fall back silently.
+    return defaultValue;
+  }
+}
+
 export default function App() {
   const [targetScore] = useState(DEFAULT_TARGET_SCORE);
-  const { game, isHumanTurn, advisorReport, computerDecision, selectionValidity, actions, canBank } =
-    useFarkleGame(targetScore);
+  const [pauseAfterComputerTurn, setPauseAfterComputerTurn] = useState(() =>
+    readStoredBoolean(PAUSE_AFTER_COMPUTER_TURN_KEY, true),
+  );
+
+  const togglePauseAfterComputerTurn = () => {
+    setPauseAfterComputerTurn((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(PAUSE_AFTER_COMPUTER_TURN_KEY, String(next));
+      } catch {
+        // Ignore storage failures - the toggle still works for the rest of this session.
+      }
+      return next;
+    });
+  };
+
+  const { game, isHumanTurn, advisorReport, computerDecision, selectionValidity, actions, canBank } = useFarkleGame(
+    targetScore,
+    undefined,
+    undefined,
+    pauseAfterComputerTurn,
+  );
 
   const { turn, players, winnerId } = game;
   const isGameOver = turn.phase === 'game-over';
@@ -182,6 +214,25 @@ export default function App() {
             <section className="panel panel--scoring">
               <CollapsiblePanel title="📖 Scoring guide" storageKey="farkle:panel:scoring-open" defaultOpen={false}>
                 <ScoringChart />
+              </CollapsiblePanel>
+            </section>
+
+            <section className="panel panel--settings">
+              <CollapsiblePanel title="⚙️ Settings" storageKey="farkle:panel:settings-open" defaultOpen={false}>
+                <label className="settings__toggle">
+                  <input
+                    type="checkbox"
+                    checked={pauseAfterComputerTurn}
+                    onChange={togglePauseAfterComputerTurn}
+                  />
+                  <span>
+                    Pause after computer's turn
+                    <span className="settings__toggle-hint">
+                      Show a "Continue" button after the computer banks or Farkles, so you can review its move
+                      before play passes back. Turn off to let the computer's turns advance automatically.
+                    </span>
+                  </span>
+                </label>
               </CollapsiblePanel>
             </section>
           </aside>

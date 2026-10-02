@@ -41,6 +41,14 @@ export function useFarkleGame(
    * future user-configurable setting; see docs/settings.md.
    */
   riskAwareness = false,
+  /**
+   * When true (the default), the computer's turn stops in the `farkled`/`turn-banked`
+   * phase and waits for the human to click "Continue" before play passes back, giving
+   * them a chance to read the computer's reasoning/result. When false, the computer's
+   * turn advances automatically (after `computerMoveDelayMs`) without requiring a click,
+   * for players who'd rather play faster without reviewing every computer turn.
+   */
+  pauseAfterComputerTurn = true,
 ) {
   const [game, setGame] = useState<GameState>(() => createInitialGameState(targetScore));
   const [computerDecision, setComputerDecision] = useState<ComputerDecision | null>(null);
@@ -192,6 +200,25 @@ export function useFarkleGame(
 
     return undefined;
   }, [game, computerMoveDelayMs, computerDecision, riskAwareness]);
+
+  // When the computer's turn has ended (Farkled, or banked and paused in
+  // `turn-banked`) and pausing for review is disabled, automatically advance past it
+  // after a short delay instead of waiting for the human to click "Continue".
+  useEffect(() => {
+    if (pauseAfterComputerTurn) return undefined;
+    if (game.turn.playerId !== 'computer') return undefined;
+    if (game.turn.phase !== 'farkled' && game.turn.phase !== 'turn-banked') return undefined;
+
+    const timer = setTimeout(() => {
+      setGame((g) => {
+        if (g.turn.playerId !== 'computer' || (g.turn.phase !== 'farkled' && g.turn.phase !== 'turn-banked')) {
+          return g;
+        }
+        return endFarkledTurn(g);
+      });
+    }, computerMoveDelayMs);
+    return () => clearTimeout(timer);
+  }, [game.turn.playerId, game.turn.phase, pauseAfterComputerTurn, computerMoveDelayMs]);
 
   return {
     game,

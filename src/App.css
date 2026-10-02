@@ -902,6 +902,28 @@ body {
   color: var(--danger);
 }
 
+.settings__toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.settings__toggle input {
+  margin-top: 0.2rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.settings__toggle-hint {
+  display: block;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  margin-top: 0.25rem;
+  font-weight: 400;
+}
+
 .game-over {
   text-align: center;
   background: var(--panel-bg);

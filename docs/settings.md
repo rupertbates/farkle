@@ -1,8 +1,21 @@
 # Future settings
 
-There's no settings UI yet. This tracks game behavior that's already been built as a
-parameterized/opt-in hook or function argument, specifically so it can be wired up to a
-settings panel later without further refactoring of the game logic itself.
+There's no settings UI yet except where noted below. This tracks game behavior that's
+already been built as a parameterized/opt-in hook or function argument, specifically so
+it can be wired up to a settings panel later without further refactoring of the game
+logic itself.
+
+## Implemented & exposed
+
+- **Pause after computer's turn** - `useFarkleGame(targetScore, computerMoveDelayMs, riskAwareness, pauseAfterComputerTurn)`
+  (boolean, defaults to `true`). When enabled, the computer's turn stops in the
+  `farkled`/`turn-banked` phase and waits for the player to click "Continue" before play
+  passes back, so they have a chance to review the computer's move/reasoning. When
+  disabled, the computer's turn advances automatically (after `computerMoveDelayMs`)
+  without requiring a click, for players who'd rather play faster.
+  - Exposed via the "⚙️ Settings" panel in `App.tsx` (a checkbox), persisted to
+    `localStorage` under `farkle:setting:pause-after-computer-turn` the same way the
+    collapsible panels remember their open/closed state.
 
 ## Ready to expose
 
@@ -33,11 +46,6 @@ to the player via any UI control. `App.tsx` currently hardcodes their defaults.
     pass and may need tuning once this is player-facing.
   - Suggested UI: a simple toggle, e.g. "Risk-aware advice" or "Consider game state", off
     by default to preserve the original pure-EV behavior.
-- **Pause after computer turn** - `useFarkleGame(targetScore, computerMoveDelayMs, riskAwareness, pauseAfterComputerTurn)`
-  (boolean, defaults to `false`). When enabled, the game pauses after the computer's
-  turn until the player clicks "Continue". This is useful for
-  players who want to study the advisor's reasoning before moving on.
-  - Suggested UI: a simple toggle, e.g. "Pause after computer turn", off by default.
 
 ## Not yet implemented (ideas only)
 
