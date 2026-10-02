@@ -70,6 +70,14 @@ export default function App() {
   const nextRollLabel = diceLeftIfRolled === 0 ? `🔥 Roll ${nextRollCount} dice (Hot Dice!)` : `Roll ${nextRollCount} dice`;
   const nextRollShortLabel = diceLeftIfRolled === 0 ? '🔥 Roll' : 'Roll';
 
+  // The farkled/turn-banked review banners' button both advances past the finished
+  // turn and - when that hands play to the human - immediately rolls for them (see
+  // `continueTurn`). Label and style it as the "Roll" action it now performs in that
+  // case, rather than a plain "Continue", so it's clear a roll is about to happen.
+  const nextTurnIsHuman = turn.playerId === 'computer';
+  const continueBtnLabel = nextTurnIsHuman ? 'Roll 6 dice' : 'Continue';
+  const continueBtnClassName = nextTurnIsHuman ? 'btn btn--primary' : 'btn';
+
   let computerStatus = 'Computer is playing…';
   if (!isHumanTurn && !isGameOver) {
     if (turn.phase === 'awaiting-roll') {
@@ -145,8 +153,8 @@ export default function App() {
                     : `${players.computer.name} loses the ${turn.turnScore} points banked this turn.`}
                 </p>
                 {(isHumanTurn || pauseAfterComputerTurn) && (
-                  <button type="button" className="btn" onClick={actions.continueTurn}>
-                    Continue
+                  <button type="button" className={continueBtnClassName} onClick={actions.continueTurn}>
+                    {continueBtnLabel}
                   </button>
                 )}
               </div>
@@ -159,8 +167,8 @@ export default function App() {
                   {players[turn.playerId].totalScore.toLocaleString()}).
                 </p>
                 {(isHumanTurn || pauseAfterComputerTurn) && (
-                  <button type="button" className="btn" onClick={actions.continueTurn}>
-                    Continue
+                  <button type="button" className={continueBtnClassName} onClick={actions.continueTurn}>
+                    {continueBtnLabel}
                   </button>
                 )}
               </div>
