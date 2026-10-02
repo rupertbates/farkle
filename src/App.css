@@ -121,7 +121,7 @@ body {
 .board-row {
   display: flex;
   gap: 1.25rem;
-  align-items: stretch;
+  align-items: flex-start;
   margin: 1rem 0;
 }
 
@@ -178,6 +178,11 @@ body {
   border-radius: 0.75rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px dashed var(--panel-border);
+  /* Caps at the board's own max height (it's square, so max-width == max-height) so a
+   * turn with lots of held dice scrolls internally instead of growing taller than the
+   * board and/or (via align-items: stretch upstream) squashing the board out of square. */
+  max-height: min(560px, 70vh);
+  overflow-y: auto;
 }
 
 .held-rail h4 {
@@ -296,8 +301,9 @@ body {
 }
 
 .die--sm {
-  width: 46px;
-  height: 46px;
+  width: 28px;
+  height: 28px;
+  border-radius: 20%;
 }
 
 .die:disabled {
@@ -320,7 +326,11 @@ body {
   grid-template-rows: repeat(3, 1fr);
   width: 100%;
   height: 100%;
-  gap: 2px;
+  /* A percentage gap scales with the die's own size, so pips stay proportionate at
+   * any die size (e.g. the smaller held-tray dice) instead of a fixed px gap eating
+   * into a disproportionately larger share of the available space the smaller the
+   * die gets. */
+  gap: 8%;
 }
 
 .die__pip {
