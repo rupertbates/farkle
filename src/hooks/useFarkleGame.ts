@@ -123,9 +123,19 @@ export function useFarkleGame(
   }, []);
 
   // Advances past the current turn (Farkled, or - for the computer - already
-  // banked and paused in `turn-banked`) once the human has reviewed it.
+  // banked and paused in `turn-banked`) once the human has reviewed it. When that
+  // hands the turn to the human, their first roll happens immediately too - no need
+  // for a separate click on "Roll" straight after "Continue". The computer's turn
+  // still rolls itself on its own delayed schedule (see the effect below), so this
+  // only fires the roll early for the human's side.
   const continueTurn = useCallback(() => {
-    setGame((g) => endFarkledTurn(g));
+    setGame((g) => {
+      const next = endFarkledTurn(g);
+      if (next.turn.playerId === 'human') {
+        return { ...next, turn: rollForTurn(next.turn) };
+      }
+      return next;
+    });
   }, []);
 
   const newGame = useCallback(() => {
