@@ -126,9 +126,11 @@ export default function App() {
                     ? `you lose the ${turn.turnScore} points banked this turn.`
                     : `${players.computer.name} loses the ${turn.turnScore} points banked this turn.`}
                 </p>
-                <button type="button" className="btn" onClick={actions.continueTurn}>
-                  Continue
-                </button>
+                {(isHumanTurn || pauseAfterComputerTurn) && (
+                  <button type="button" className="btn" onClick={actions.continueTurn}>
+                    Continue
+                  </button>
+                )}
               </div>
             )}
 
@@ -138,9 +140,11 @@ export default function App() {
                   🏦 {players[turn.playerId].name} banked {turn.turnScore} points this turn (total:{' '}
                   {players[turn.playerId].totalScore.toLocaleString()}).
                 </p>
-                <button type="button" className="btn" onClick={actions.continueTurn}>
-                  Continue
-                </button>
+                {(isHumanTurn || pauseAfterComputerTurn) && (
+                  <button type="button" className="btn" onClick={actions.continueTurn}>
+                    Continue
+                  </button>
+                )}
               </div>
             )}
 
