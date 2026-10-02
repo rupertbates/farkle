@@ -68,6 +68,7 @@ export default function App() {
   const diceLeftIfRolled = turn.dice.length - turn.selectedIndices.length;
   const nextRollCount = diceLeftIfRolled === 0 ? 6 : diceLeftIfRolled;
   const nextRollLabel = diceLeftIfRolled === 0 ? `🔥 Roll ${nextRollCount} dice (Hot Dice!)` : `Roll ${nextRollCount} dice`;
+  const nextRollShortLabel = diceLeftIfRolled === 0 ? '🔥 Roll' : 'Roll';
 
   let computerStatus = 'Computer is playing…';
   if (!isHumanTurn && !isGameOver) {
@@ -186,10 +187,15 @@ export default function App() {
                         disabled={!selectionValidity.valid}
                         onClick={actions.roll}
                       >
-                        {nextRollLabel}
+                        <span className="btn__roll-full">{nextRollLabel}</span>
+                        <span className="btn__roll-short">{nextRollShortLabel}</span>
                       </button>
                       <button type="button" className="btn btn--bank" disabled={!canBank} onClick={actions.bank}>
-                        Bank {turn.turnScore + (selectionValidity.valid ? selectionValidity.score : 0)} pts & end turn
+                        <span className="btn__bank-full">
+                          Bank {turn.turnScore + (selectionValidity.valid ? selectionValidity.score : 0)} pts & end
+                          turn
+                        </span>
+                        <span className="btn__bank-short">Bank & end turn</span>
                       </button>
                     </div>
                   </>

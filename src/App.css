@@ -560,6 +560,35 @@ body {
   flex-wrap: wrap;
 }
 
+/* The roll/bank buttons need to fit side-by-side on narrow phones without wrapping.
+ * Each carries full/short text variants swapped by breakpoint instead of wrapping onto
+ * a second line - the bank button (the longer label) shortens first; the roll button
+ * only needs to shorten further on very small screens. */
+.btn__roll-short,
+.btn__bank-short {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .btn__bank-full {
+    display: none;
+  }
+
+  .btn__bank-short {
+    display: inline;
+  }
+}
+
+@media (max-width: 380px) {
+  .btn__roll-full {
+    display: none;
+  }
+
+  .btn__roll-short {
+    display: inline;
+  }
+}
+
 .btn {
   background: #334155;
   color: var(--text);
