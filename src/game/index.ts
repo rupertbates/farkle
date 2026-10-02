@@ -6,3 +6,4 @@ export * from './advisor';
 export * from './gameEngine';
 export * from './ai';
 export * from './textUtils';
+export * from './debugRng';

@@ -4,6 +4,7 @@ import {
   bankTurn,
   canBankTurn,
   computerDecideMove,
+  createDebugRng,
   createInitialGameState,
   endFarkledTurn,
   getAdvisorReport,
@@ -52,6 +53,12 @@ export function useFarkleGame(
 ) {
   const [game, setGame] = useState<GameState>(() => createInitialGameState(targetScore));
   const [computerDecision, setComputerDecision] = useState<ComputerDecision | null>(null);
+  // QA override: see `createDebugRng` - lets `?dice=1,1,1,2,2,2` in the URL force
+  // every roll's faces instead of real randomness, to reliably check a scenario by
+  // hand. `undefined` (the normal case) falls through to `rollForTurn`'s own default
+  // (real `Math.random`). Read once per mount - the URL isn't expected to change
+  // without a full reload anyway.
+  const debugRng = useMemo(() => createDebugRng(), []);
 
   const isHumanTurn = game.turn.playerId === 'human' && game.turn.phase !== 'game-over';
   const isComputerThinking = game.currentPlayerId === 'computer' && game.turn.phase !== 'game-over';
@@ -76,7 +83,7 @@ export function useFarkleGame(
   const roll = useCallback(() => {
     setGame((g) => {
       if (g.turn.phase === 'awaiting-roll') {
-        return { ...g, turn: rollForTurn(g.turn) };
+        return { ...g, turn: rollForTurn(g.turn, debugRng) };
       }
       if (g.turn.phase === 'awaiting-selection') {
         const validity = validateCurrentSelection(g.turn);
@@ -88,11 +95,11 @@ export function useFarkleGame(
         if (turn.isHotDice) {
           return { ...g, turn };
         }
-        return { ...g, turn: rollForTurn(turn) };
+        return { ...g, turn: rollForTurn(turn, debugRng) };
       }
       return g;
     });
-  }, []);
+  }, [debugRng]);
 
   const toggleDie = useCallback((index: number) => {
     setGame((g) => ({ ...g, turn: toggleDieSelection(g.turn, index) }));
@@ -132,11 +139,11 @@ export function useFarkleGame(
     setGame((g) => {
       const next = endFarkledTurn(g);
       if (next.turn.playerId === 'human') {
-        return { ...next, turn: rollForTurn(next.turn) };
+        return { ...next, turn: rollForTurn(next.turn, debugRng) };
       }
       return next;
     });
-  }, []);
+  }, [debugRng]);
 
   const newGame = useCallback(() => {
     setGame(resetGame(targetScore));
@@ -156,11 +163,11 @@ export function useFarkleGame(
     const timer = setTimeout(() => {
       setGame((g) => {
         if (g.turn.playerId !== 'human' || g.turn.phase !== 'awaiting-roll' || !g.turn.isHotDice) return g;
-        return { ...g, turn: rollForTurn(g.turn) };
+        return { ...g, turn: rollForTurn(g.turn, debugRng) };
       });
     }, computerMoveDelayMs);
     return () => clearTimeout(timer);
-  }, [game.turn.playerId, game.turn.phase, game.turn.isHotDice, computerMoveDelayMs]);
+  }, [game.turn.playerId, game.turn.phase, game.turn.isHotDice, computerMoveDelayMs, debugRng]);
 
   // Automatically steps the computer's turn forward in distinct, delayed stages so
   // each part of its decision can be followed rather than resolving instantly:
@@ -183,7 +190,7 @@ export function useFarkleGame(
           // On a Farkle, stop here (phase becomes 'farkled') instead of immediately
           // advancing, so the human can see the banner and click Continue - same as
           // the end-of-turn review after the computer banks.
-          return { ...g, turn: rollForTurn(g.turn) };
+          return { ...g, turn: rollForTurn(g.turn, debugRng) };
         });
       }, computerMoveDelayMs);
       return () => clearTimeout(timer);
@@ -229,7 +236,7 @@ export function useFarkleGame(
     }
 
     return undefined;
-  }, [game, computerMoveDelayMs, computerDecision, riskAwareness]);
+  }, [game, computerMoveDelayMs, computerDecision, riskAwareness, debugRng]);
 
   // When the computer's turn has ended (Farkled, or banked and paused in
   // `turn-banked`) and pausing for review is disabled, automatically advance past it
