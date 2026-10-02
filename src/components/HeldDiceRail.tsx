@@ -36,6 +36,10 @@ export function HeldDiceRail({
 }: HeldDiceRailProps) {
   const hasAny = selectedIndices.length > 0 || heldGroups.length > 0;
   const pendingResult = scoreGroup(selectedIndices.map((index) => dice[index]));
+  // Dice the player has moved to this tray but not yet locked in by rolling/banking
+  // still count towards the turn score as soon as they're held, rather than only
+  // once the next roll (or bank) formally commits them.
+  const displayedTurnScore = turnScore + (pendingResult.valid ? pendingResult.score : 0);
 
   return (
     <div className="held-rail">
@@ -79,7 +83,7 @@ export function HeldDiceRail({
 
       <div className="held-rail__turn-score">
         <span>Turn score</span>
-        <span className="held-rail__turn-score-value">{turnScore.toLocaleString()} pts</span>
+        <span className="held-rail__turn-score-value">{displayedTurnScore.toLocaleString()} pts</span>
       </div>
     </div>
   );
