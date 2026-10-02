@@ -606,11 +606,52 @@ body {
 }
 
 .advisor__ev-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.advisor__ev-stat {
   display: flex;
-  gap: 1rem;
-  font-size: 0.85rem;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid transparent;
+}
+
+.advisor__ev-stat--chosen {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: var(--accent);
+}
+
+.advisor__ev-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: var(--text-dim);
-  margin-bottom: 0.3rem;
+}
+
+.advisor__ev-stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.advisor__ev-stat--chosen .advisor__ev-stat-value {
+  color: var(--accent);
+}
+
+.advisor__ev-stat-note {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.advisor__ev-stat-note--risk {
+  color: var(--danger);
 }
 
 .advisor__ev--chosen {

@@ -65,16 +65,17 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
           </p>
         )}
         <div className="advisor__ev-row">
-          <span className={best.recommendedAction === 'bank' ? 'advisor__ev--chosen' : ''}>
-            Bank now: {Math.round(best.bank.expectedValue).toLocaleString()} pts (certain)
-          </span>
-          <span className={best.recommendedAction === 'continue' ? 'advisor__ev--chosen' : ''}>
-            Keep rolling ({numberWord(best.diceRemainingIfContinuing)} dice): ~{Math.round(best.continue.expectedValue).toLocaleString()} pts on average
-          </span>
+          <div className={`advisor__ev-stat${best.recommendedAction === 'bank' ? ' advisor__ev-stat--chosen' : ''}`}>
+            <span className="advisor__ev-stat-label">Bank now</span>
+            <span className="advisor__ev-stat-value">{Math.round(best.bank.expectedValue).toLocaleString()} pts</span>
+            <span className="advisor__ev-stat-note">certain</span>
+          </div>
+          <div className={`advisor__ev-stat${best.recommendedAction === 'continue' ? ' advisor__ev-stat--chosen' : ''}`}>
+            <span className="advisor__ev-stat-label">Keep rolling ({numberWord(best.diceRemainingIfContinuing)} dice)</span>
+            <span className="advisor__ev-stat-value">~{Math.round(best.continue.expectedValue).toLocaleString()} pts</span>
+            <span className="advisor__ev-stat-note advisor__ev-stat-note--risk">average, {(best.farkleProbabilityIfContinuing * 100).toFixed(1)}% farkle risk</span>
+          </div>
         </div>
-        <p className="advisor__farkle-prob">
-          Farkle risk if continuing: {(best.farkleProbabilityIfContinuing * 100).toFixed(1)}%
-        </p>
         <details className="advisor__reasoning">
           <summary>Show reasoning</summary>
           <p className="advisor__explanation">
