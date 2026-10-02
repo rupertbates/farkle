@@ -1,4 +1,5 @@
 import { tally } from './dice';
+import { numberWord } from './textUtils';
 import type { DieValue, ScoreBreakdownItem, ScoreResult, SelectionCandidate } from './types';
 
 /** Base point value for three-of-a-kind of a given face. */
@@ -156,47 +157,35 @@ export function findBestSelection(values: DieValue[]): {
 }
 
 /**
- * Describes, in plain English, the difference between taking every scoring die
- * (`bestIndices`) and the smaller subset actually being proposed (`indices`). Any die
- * that doesn't contribute to a score is never part of `bestIndices` in the first place
- * (the greedy `findBestSelection` already captures every scoring die), so every valid
- * subset is necessarily a subset of `bestIndices` - this only ever needs to describe
- * what's being left behind.
+ * Describes, in plain English, the dice this candidate actually keeps - phrased only in
+ * terms of what's kept (never what's skipped, so advice always reads as a positive
+ * instruction). Any die that doesn't contribute to a score is never part of
+ * `bestIndices` in the first place (the greedy `findBestSelection` already captures
+ * every scoring die), so every valid subset is necessarily a subset of `bestIndices`.
  */
 function describeSelection(values: DieValue[], bestIndices: number[], indices: number[]): string {
   if (indices.length === bestIndices.length) {
     return 'Take all scoring dice';
   }
 
-  const kept = new Set(indices);
-  const dropped = bestIndices.filter((i) => !kept.has(i));
-  const countOf = (value: DieValue) => values.filter((v) => v === value).length;
-  // 1s and 5s score individually when there are fewer than three of them, so they're
-  // the only dice a player can optionally leave behind rather than bank.
-  const isOptionalSingle = (value: DieValue) => (value === 1 || value === 5) && countOf(value) < 3;
+  const countInBest = (value: DieValue) => bestIndices.filter((i) => values[i] === value).length;
+  const countKept = (value: DieValue) => indices.filter((i) => values[i] === value).length;
 
-  const distinctDroppedValues = Array.from(new Set(dropped.map((i) => values[i])));
-  const skipped: string[] = [];
-  const partial: string[] = [];
+  const distinctBestValues = Array.from(new Set(bestIndices.map((i) => values[i])));
+  const parts: string[] = [];
 
-  for (const value of distinctDroppedValues) {
-    const total = bestIndices.filter((i) => values[i] === value).length;
-    const keptCount = indices.filter((i) => values[i] === value).length;
-    if (keptCount === 0) {
-      skipped.push(isOptionalSingle(value) ? `lone ${value}s` : `the ${value}s`);
+  for (const value of distinctBestValues) {
+    const total = countInBest(value);
+    const kept = countKept(value);
+    if (kept === 0) continue; // Nothing of this value is kept - say nothing about it.
+    if (kept === total) {
+      parts.push(`${numberWord(total)} ${value}${total > 1 ? 's' : ''}`);
     } else {
-      partial.push(`${keptCount} of ${total} ${value}s`);
+      parts.push(`${numberWord(kept)} of ${numberWord(total)} ${value}s`);
     }
   }
 
-  const parts: string[] = [];
-  if (skipped.length > 0) parts.push(`Skip ${skipped.join(' and ')}`);
-  if (partial.length > 0) parts.push(`Keep ${partial.join(' and ')}`);
-
-  if (parts.length === 0) return 'Keep a smaller scoring selection, reroll the rest';
-
-  const tail = skipped.length > 0 && partial.length === 0 ? ', keep more dice to reroll' : ', reroll the rest';
-  return parts.join(', ') + tail;
+  return `Keep ${parts.join(' and ')}, reroll the rest`;
 }
 
 /**

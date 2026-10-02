@@ -1,5 +1,6 @@
 import { generateSelectionCandidates } from './scoring';
 import { DEFAULT_LOOKAHEAD_DEPTH, getContinuationValue, getRollDistributionStats } from './probability';
+import { numberWord } from './textUtils';
 import type { DieValue, SelectionCandidate } from './types';
 
 export interface ActionEvaluation {
@@ -158,7 +159,7 @@ export function getAdvisorReport(input: AdvisorInput): AdvisorReport {
       action: 'continue',
       expectedValue: continueEV,
       explanation:
-        (isHotDice ? `🔥 Hot dice! You get a fresh set of 6 dice. Rolling them` : `Rolling ${diceRemainingIfContinuing} dice`) +
+        (isHotDice ? `🔥 Hot dice! You get a fresh set of six dice. Rolling them` : `Rolling ${numberWord(diceRemainingIfContinuing)} dice`) +
         ` has a ${(stats.farkleProbability * 100).toFixed(1)}% ` +
         `chance of Farkling on this very next roll (losing all ${turnScoreAfter.toLocaleString()} points this turn). ` +
         `Factoring in the next few rolls played optimally - including the chance of chaining into further Hot Dice - ` +

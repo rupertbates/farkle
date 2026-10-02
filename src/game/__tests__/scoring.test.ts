@@ -89,12 +89,12 @@ describe('generateSelectionCandidates', () => {
     expect(generateSelectionCandidates([2, 3, 4, 6, 2, 3])).toEqual([]);
   });
 
-  it('offers a trimmed alternative that skips a lone 5', () => {
+  it('offers a trimmed alternative that keeps only the mandatory dice', () => {
     const dice: DieValue[] = [1, 1, 1, 5, 2, 3];
     const candidates = generateSelectionCandidates(dice);
     const labels = candidates.map((c) => c.label);
     expect(labels).toContain('Take all scoring dice');
-    expect(labels).toContain('Skip lone 5s, keep more dice to reroll');
+    expect(labels).toContain('Keep three 1s, reroll the rest');
   });
 
   it('offers a partial-take alternative when there are two lone 5s and nothing else scores', () => {
@@ -109,7 +109,7 @@ describe('generateSelectionCandidates', () => {
     expect(takeAll?.indices).toHaveLength(2);
 
     const takeOne = candidates.find((c) => c.indices.length === 1);
-    expect(takeOne).toMatchObject({ result: { score: 50 } });
+    expect(takeOne).toMatchObject({ result: { score: 50 }, label: 'Keep one of two 5s, reroll the rest' });
   });
 
   it('does not split a 3+ of a kind group into partial sub-selections', () => {

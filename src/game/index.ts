@@ -5,3 +5,4 @@ export * from './probability';
 export * from './advisor';
 export * from './gameEngine';
 export * from './ai';
+export * from './textUtils';

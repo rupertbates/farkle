@@ -1,4 +1,5 @@
 import type { AdvisorReport, ComputerDecision } from '../game';
+import { numberWord } from '../game';
 
 export interface AdvisorPanelProps {
   report: AdvisorReport | null;
@@ -51,10 +52,12 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
       )}
       <div className="advisor__best">
         <p className="advisor__best-label">{isComputerMode ? 'Best EV option: ' : 'Recommended: '}{best.candidate.label}</p>
-        {best.isHotDice && <p className="advisor__hot-dice-tag">🔥 This selection uses all 6 dice - Hot Dice! You'll get a fresh 6 to roll.</p>}
-        <p className="advisor__best-action">
-          Then <strong>{best.recommendedAction === 'bank' ? 'BANK' : 'KEEP ROLLING'}</strong>
-        </p>
+        {best.isHotDice && <p className="advisor__hot-dice-tag">🔥 This selection uses all six dice - Hot Dice! You'll get a fresh six to roll.</p>}
+        {!(best.recommendedAction === 'continue' && best.candidate.label.includes('reroll the rest')) && (
+          <p className="advisor__best-action">
+            Then <strong>{best.recommendedAction === 'bank' ? 'bank' : 'keep rolling'}</strong>
+          </p>
+        )}
         {best.riskAdjustmentExplanation && (
           <p className="advisor__risk-note">⚖️ Adjusted for game state: {best.riskAdjustmentExplanation}.</p>
         )}
@@ -82,7 +85,7 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
               Bank: EV {Math.round(opt.bank.expectedValue).toLocaleString()}
             </span>
             <span className={opt.recommendedAction === 'continue' ? 'advisor__ev--chosen' : ''}>
-              Continue ({opt.diceRemainingIfContinuing} dice): EV {Math.round(opt.continue.expectedValue).toLocaleString()}
+              Continue ({numberWord(opt.diceRemainingIfContinuing)} dice): EV {Math.round(opt.continue.expectedValue).toLocaleString()}
             </span>
           </div>
           <p className="advisor__farkle-prob">
