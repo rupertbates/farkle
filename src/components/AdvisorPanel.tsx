@@ -32,6 +32,9 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
   }
 
   const { options, best, wouldWinByBanking } = report;
+  // `best` is already shown in full above; re-listing it in the comparison list below
+  // would just duplicate the same title/breakdown/explanation a second time.
+  const otherOptions = options.filter((opt) => opt !== best);
 
   return (
     <div className="advisor">
@@ -58,6 +61,20 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
             Then <strong>{best.recommendedAction === 'bank' ? 'bank' : 'keep rolling'}</strong>
           </p>
         )}
+        <div className="advisor__ev-row">
+          <span className={best.recommendedAction === 'bank' ? 'advisor__ev--chosen' : ''}>
+            Bank: EV {Math.round(best.bank.expectedValue).toLocaleString()}
+          </span>
+          <span className={best.recommendedAction === 'continue' ? 'advisor__ev--chosen' : ''}>
+            Continue ({numberWord(best.diceRemainingIfContinuing)} dice): EV {Math.round(best.continue.expectedValue).toLocaleString()}
+          </span>
+        </div>
+        <p className="advisor__farkle-prob">
+          Farkle risk if continuing: {(best.farkleProbabilityIfContinuing * 100).toFixed(1)}%
+        </p>
+        <p className="advisor__explanation">
+          {best.recommendedAction === 'bank' ? best.bank.explanation : best.continue.explanation}
+        </p>
         {best.riskAdjustmentExplanation && (
           <p className="advisor__risk-note">⚖️ Adjusted for game state: {best.riskAdjustmentExplanation}.</p>
         )}
@@ -68,42 +85,47 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
         )}
       </div>
 
-      {options.map((opt, i) => (
-        <div key={i} className="advisor__option">
-          <p className="advisor__option-title">
-            {opt.candidate.label} - {opt.candidate.result.score} pts {opt.isHotDice && <span className="advisor__hot-dice-badge">🔥 Hot Dice</span>}
-          </p>
-          <ul className="advisor__breakdown">
-            {opt.candidate.result.breakdown.map((b, j) => (
-              <li key={j}>
-                {b.description}: {b.points} pts
+      {otherOptions.length > 0 && (
+        <details className="advisor__other-options">
+          <summary>
+            {otherOptions.length === 1 ? '1 other option considered' : `${otherOptions.length} other options considered`}
+          </summary>
+          <ul className="advisor__other-options-list">
+            {otherOptions.map((opt, i) => (
+              <li key={i} className="advisor__option-compact">
+                <div className="advisor__option-compact-row">
+                  <span className="advisor__option-compact-label">
+                    {opt.candidate.label} - {opt.candidate.result.score} pts {opt.isHotDice && <span className="advisor__hot-dice-badge">🔥</span>}
+                  </span>
+                  {!isComputerMode && (
+                    <button
+                      type="button"
+                      className="advisor__apply-btn advisor__apply-btn--secondary"
+                      onClick={() => onApplySelection(opt.candidate.indices)}
+                    >
+                      Select instead
+                    </button>
+                  )}
+                </div>
+                <p className="advisor__option-compact-stats">
+                  <span className={opt.recommendedAction === 'bank' ? 'advisor__ev--chosen' : ''}>
+                    Bank: EV {Math.round(opt.bank.expectedValue).toLocaleString()}
+                  </span>
+                  {' · '}
+                  <span className={opt.recommendedAction === 'continue' ? 'advisor__ev--chosen' : ''}>
+                    Continue ({numberWord(opt.diceRemainingIfContinuing)} dice): EV {Math.round(opt.continue.expectedValue).toLocaleString()}
+                  </span>
+                  {' · '}
+                  <span className="advisor__farkle-prob advisor__farkle-prob--inline">
+                    Farkle risk {(opt.farkleProbabilityIfContinuing * 100).toFixed(1)}%
+                  </span>
+                </p>
               </li>
             ))}
           </ul>
-          <div className="advisor__ev-row">
-            <span className={opt.recommendedAction === 'bank' ? 'advisor__ev--chosen' : ''}>
-              Bank: EV {Math.round(opt.bank.expectedValue).toLocaleString()}
-            </span>
-            <span className={opt.recommendedAction === 'continue' ? 'advisor__ev--chosen' : ''}>
-              Continue ({numberWord(opt.diceRemainingIfContinuing)} dice): EV {Math.round(opt.continue.expectedValue).toLocaleString()}
-            </span>
-          </div>
-          <p className="advisor__farkle-prob">
-            Farkle risk if continuing: {(opt.farkleProbabilityIfContinuing * 100).toFixed(1)}%
-          </p>
-          <p className="advisor__explanation">
-            {opt.recommendedAction === 'bank' ? opt.bank.explanation : opt.continue.explanation}
-          </p>
-          {opt.riskAdjustmentExplanation && (
-            <p className="advisor__risk-note">⚖️ Adjusted for game state: {opt.riskAdjustmentExplanation}.</p>
-          )}
-          {!isComputerMode && opt !== best && (
-            <button type="button" className="advisor__apply-btn advisor__apply-btn--secondary" onClick={() => onApplySelection(opt.candidate.indices)}>
-              Select these dice instead
-            </button>
-          )}
-        </div>
-      ))}
+        </details>
+      )}
     </div>
   );
 }
+

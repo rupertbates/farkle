@@ -33,6 +33,11 @@ body {
 }
 
 .app__header h1 {
+  /* Color emoji glyphs (like the dice below) often render with taller internal metrics
+   * than the surrounding text's line-height would suggest, which can make them visually
+   * overlap a tightly-spaced sibling below. An explicit line-height keeps this title's
+   * own box tall enough to contain the emoji with no bleed into .app__subtitle. */
+  line-height: 1.3;
   margin-bottom: 0.25rem;
 }
 
@@ -105,9 +110,38 @@ body {
   align-items: start;
 }
 
+/* On desktop the advisor column can grow much taller than the board/scoring columns
+ * once there are several viable selections to compare, leaving the page oddly
+ * imbalanced (long empty space beside the shorter columns). Pinning it in the
+ * viewport with its own scroll keeps the three columns visually balanced and the
+ * recommendation always reachable without hunting for it after a long scroll. */
+@media (min-width: 1101px) {
+  .panel--advisor {
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+  }
+}
+
 @media (max-width: 1100px) {
   .app__main {
     grid-template-columns: 1fr;
+  }
+
+  /* Stacked on narrower screens, gameplay (the board) and the advice that follows each
+   * roll are what you need first; the scoring reference table is useful but secondary,
+   * so it's pushed below both rather than pushing the actual dice down the page. */
+  .panel--table {
+    order: 1;
+  }
+
+  .panel--advisor {
+    order: 2;
+  }
+
+  .panel--scoring {
+    order: 3;
   }
 }
 
@@ -601,6 +635,64 @@ body {
   font-style: italic;
   color: var(--gold);
   margin: 0 0 0.5rem;
+}
+
+/* Alternative options are secondary to the one recommendation above, so they're tucked
+ * behind a <details> disclosure as compact single-line rows rather than full repeated
+ * paragraphs - keeping the panel scannable even when a roll offers many viable
+ * selections (e.g. several pairs on a first roll). */
+.advisor__other-options {
+  margin-top: 1rem;
+  border-top: 1px solid var(--panel-border);
+  padding-top: 0.75rem;
+}
+
+.advisor__other-options summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  user-select: none;
+}
+
+.advisor__other-options summary:hover {
+  color: var(--text);
+}
+
+.advisor__other-options-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.advisor__option-compact {
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--panel-border);
+  font-size: 0.85rem;
+}
+
+.advisor__option-compact:first-child {
+  border-top: none;
+}
+
+.advisor__option-compact-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.advisor__option-compact-label {
+  flex: 1;
+}
+
+.advisor__option-compact-stats {
+  margin: 0.3rem 0 0;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.advisor__farkle-prob--inline {
+  color: var(--danger);
 }
 
 .game-over {
