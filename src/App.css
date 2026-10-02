@@ -205,6 +205,13 @@ body {
   padding: 1.25rem;
 }
 
+/* The board's panel had noticeably more empty space above its "Your/Computer's turn"
+ * heading than other panels feel like they need - shrink just the top padding here
+ * rather than the shared .panel padding (which the sidebar panels still rely on). */
+.panel--table {
+  padding-top: 0.1rem;
+}
+
 /* Shared collapse/expand chrome for the scoring guide and advisor panels - both are
  * useful but not something every player wants taking up space on every single roll, so
  * they share one clickable header that toggles visibility and remembers the choice. */
