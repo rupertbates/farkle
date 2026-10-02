@@ -380,6 +380,62 @@ body {
   display: inline-flex;
 }
 
+/* The Roll/Bank buttons live right on the board, pinned to the bottom of the felt,
+ * rather than as a separate block underneath it. `GameBoard` compresses the dice
+ * grid into the remaining space above this bar (see `CONTROLS_RESERVED_PCT`) so a
+ * die is never scattered underneath it. The gradient (rather than a hard panel)
+ * keeps it reading as part of the felt instead of a bolted-on toolbar. */
+.board__controls-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.75rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 0 0 0.7rem 0.7rem;
+  background: linear-gradient(
+    to top,
+    rgba(4, 12, 8, 0.88) 0%,
+    rgba(4, 12, 8, 0.62) 60%,
+    rgba(4, 12, 8, 0) 100%
+  );
+}
+
+.board__controls-overlay .controls {
+  margin: 0;
+  align-items: center;
+}
+
+.board__controls-overlay .controls__row {
+  justify-content: center;
+}
+
+/* The end-of-turn (Farkle / banked) message pops over the board itself instead of
+ * sitting in a block below it - the darkened backdrop keeps the card readable even
+ * though it's fine for it to cover any dice still showing underneath. */
+.board__popover-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(4, 10, 7, 0.55);
+  border-radius: 1rem;
+}
+
+.board__popover-card {
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+
+.board__popover-card p {
+  margin: 0 0 0.75rem;
+}
+
 .held-rail {
   flex: 0 0 150px;
   display: flex;
@@ -765,11 +821,11 @@ body {
 }
 
 .farkle-banner {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(30, 10, 10, 0.92);
   border: 1px solid var(--danger);
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  margin: 1rem 0;
+  border-radius: 0.75rem;
+  padding: 1rem 1.15rem;
+  margin: 0;
 }
 
 .farkle-banner p,
@@ -778,11 +834,11 @@ body {
 }
 
 .turn-banked-banner {
-  background: rgba(56, 189, 248, 0.12);
+  background: rgba(8, 26, 36, 0.92);
   border: 1px solid var(--bank);
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  margin: 1rem 0;
+  border-radius: 0.75rem;
+  padding: 1rem 1.15rem;
+  margin: 0;
 }
 
 .hot-dice-banner {

@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import type { DieValue } from '../game';
 import { findBestSelection } from '../game';
@@ -21,6 +22,14 @@ export interface GameBoardProps {
    *  Only true before the very first roll of a new game - every other empty board
    *  (the start of each subsequent turn) stays blank instead of repeating the hint. */
   showInitialPlaceholder: boolean;
+  /** Roll/Bank action buttons, pinned to the bottom of the felt as an overlay bar.
+   *  When present, dice are scattered only in the remaining space above it (see
+   *  `CONTROLS_RESERVED_PCT`) so live dice never land underneath the buttons. */
+  controlsOverlay?: ReactNode;
+  /** The end-of-turn (Farkle / banked) message, shown as a centered popover on top of
+   *  the felt instead of a separate block below the board. It's fine for this to cover
+   *  any dice still showing underneath - the turn's already over. */
+  popover?: ReactNode;
 }
 
 interface DieLayout {
@@ -33,13 +42,63 @@ interface DieLayout {
   throwX: number;
 }
 
-/** Divides the board into a jittered grid so dice land scattered but without heavy overlap. */
-function layoutDice(count: number): DieLayout[] {
+/** Fallback percentage of the felt's height kept clear at the bottom for
+ *  `controlsOverlay` before its real height has been measured. The actual reserve is
+ *  measured live (see `useControlsReservePct` below) since the overlay's content -
+ *  one button vs. a button row plus a status line - varies in height by phase and
+ *  viewport, and a fixed guess under- or over-reserves space depending on which. */
+const CONTROLS_RESERVED_PCT_FALLBACK = 24;
+
+/** Extra padding (percentage points) added on top of the controls overlay's measured
+ *  height, so dice never land flush against its top edge. */
+const CONTROLS_RESERVE_BUFFER_PCT = 4;
+
+/** Measures `overlayRef`'s rendered height as a percentage of `feltRef`'s height,
+ *  live, so the dice-reserved area always matches the actual controls bar - which
+ *  varies (a single Roll button vs. a button row plus status text) by turn phase and
+ *  viewport width - instead of relying on one fixed guess for every case. */
+function useControlsReservePct(
+  feltRef: React.RefObject<HTMLDivElement | null>,
+  overlayRef: React.RefObject<HTMLDivElement | null>,
+  active: boolean,
+): number {
+  const [pct, setPct] = useState(CONTROLS_RESERVED_PCT_FALLBACK);
+
+  useEffect(() => {
+    if (!active) return;
+    const felt = feltRef.current;
+    const overlay = overlayRef.current;
+    if (!felt || !overlay) return;
+
+    const measure = () => {
+      const feltHeight = felt.getBoundingClientRect().height;
+      const overlayHeight = overlay.getBoundingClientRect().height;
+      if (feltHeight === 0) return;
+      const measured = (overlayHeight / feltHeight) * 100 + CONTROLS_RESERVE_BUFFER_PCT;
+      setPct(Math.min(70, Math.max(CONTROLS_RESERVED_PCT_FALLBACK, measured)));
+    };
+
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(felt);
+    observer.observe(overlay);
+    return () => observer.disconnect();
+  }, [active, feltRef, overlayRef]);
+
+  return active ? pct : 0;
+}
+
+/** Divides the board into a jittered grid so dice land scattered but without heavy
+ *  overlap. `reserveBottomPct` compresses the grid into the remaining top portion of
+ *  the felt, leaving the bottom clear for an overlaid controls bar, if any. */
+function layoutDice(count: number, reserveBottomPct: number): DieLayout[] {
   if (count === 0) return [];
   const cols = Math.ceil(Math.sqrt(count));
   const rows = Math.ceil(count / cols);
   const cellW = 100 / cols;
   const cellH = 100 / rows;
+  const usableHeightPct = 100 - reserveBottomPct;
 
   const cells = Array.from({ length: cols * rows }, (_, i) => i);
   for (let i = cells.length - 1; i > 0; i--) {
@@ -55,7 +114,7 @@ function layoutDice(count: number): DieLayout[] {
     const jitterY = (Math.random() - 0.5) * cellH * 0.5;
     return {
       leftPct: col * cellW + cellW / 2 + jitterX,
-      topPct: row * cellH + cellH / 2 + jitterY,
+      topPct: (row * cellH + cellH / 2 + jitterY) * (usableHeightPct / 100),
       rotate: Math.random() * 70 - 35,
       throwX: (Math.random() - 0.5) * 160,
     };
@@ -76,13 +135,19 @@ export function GameBoard({
   interactive,
   onToggle,
   showInitialPlaceholder,
+  controlsOverlay,
+  popover,
 }: GameBoardProps) {
+  const feltRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const reservePct = useControlsReservePct(feltRef, overlayRef, Boolean(controlsOverlay));
+
   // Scattered resting positions/rotations per die, computed once per roll (keyed by
   // rollId) so re-renders (e.g. toggling a hold) don't recompute/replay the throw.
   const layout = useMemo(
-    () => layoutDice(dice.length),
+    () => layoutDice(dice.length, reservePct),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rollId, dice.length],
+    [rollId, dice.length, reservePct],
   );
 
   const liveDice = dice
@@ -96,7 +161,7 @@ export function GameBoard({
 
   return (
     <div className="board">
-      <div className="board__felt">
+      <div className="board__felt" ref={feltRef}>
         {dice.length === 0 && showInitialPlaceholder && (
           <p className="board__placeholder">🎲 Roll to throw the dice onto the board</p>
         )}
@@ -127,6 +192,18 @@ export function GameBoard({
             </motion.div>
           );
         })}
+
+        {controlsOverlay && (
+          <div className="board__controls-overlay" ref={overlayRef}>
+            {controlsOverlay}
+          </div>
+        )}
+
+        {popover && (
+          <div className="board__popover-backdrop">
+            <div className="board__popover">{popover}</div>
+          </div>
+        )}
       </div>
     </div>
   );

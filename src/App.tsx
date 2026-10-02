@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { DEFAULT_TARGET_SCORE } from './game';
 import { useFarkleGame } from './hooks/useFarkleGame';
 import { GameBoard } from './components/GameBoard';
@@ -87,6 +88,92 @@ export default function App() {
     }
   }
 
+  // The Roll/Bank buttons live as an overlay pinned to the bottom of the board itself
+  // (rather than below it) so the action is right where the dice are. Built here as a
+  // variable (instead of inline conditionals) so `GameBoard` can tell whether to reserve
+  // space for it - and so it's `null` (not just empty) outside the human's own turn.
+  let controlsOverlay: ReactNode = null;
+  if (isHumanTurn && turn.phase === 'awaiting-roll') {
+    controlsOverlay = (
+      <div className="controls">
+        <button type="button" className="btn btn--primary" onClick={actions.roll}>
+          {turn.isHotDice ? `🔥 Roll ${turn.diceToRoll} dice (Hot Dice!)` : `Roll ${turn.diceToRoll} dice`}
+        </button>
+        {turn.turnScore > 0 && (
+          <button type="button" className="btn btn--bank" disabled={!canBank} onClick={actions.bank}>
+            Bank {turn.turnScore} pts & end turn
+          </button>
+        )}
+      </div>
+    );
+  } else if (isHumanTurn && turn.phase === 'awaiting-selection') {
+    controlsOverlay = (
+      <div className="controls">
+        {/* The valid case ("Held dice score N pts") is redundant now that the
+         * held rail's footer and the button labels below both already show the
+         * score, so only the invalid case has real text. The paragraph still
+         * always renders (just visually hidden) so its line of space stays
+         * reserved - otherwise the buttons below jump up/down as this message
+         * appears and disappears while toggling dice. */}
+        <p
+          className="selection-status"
+          aria-hidden={selectionValidity.valid}
+          style={selectionValidity.valid ? { visibility: 'hidden' } : undefined}
+        >
+          {selectionValidity.valid ? '\u00A0' : selectionValidity.reason}
+        </p>
+        <div className="controls__row">
+          <button type="button" className="btn btn--primary" disabled={!selectionValidity.valid} onClick={actions.roll}>
+            <span className="btn__roll-full">{nextRollLabel}</span>
+            <span className="btn__roll-short">{nextRollShortLabel}</span>
+          </button>
+          <button type="button" className="btn btn--bank" disabled={!canBank} onClick={actions.bank}>
+            <span className="btn__bank-full">
+              Bank {turn.turnScore + (selectionValidity.valid ? selectionValidity.score : 0)} pts & end turn
+            </span>
+            <span className="btn__bank-short">Bank & end turn</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // The computer's end-of-turn message (Farkle or what it banked) is shown as a
+  // popover centered on the board itself, rather than a separate block below it - it's
+  // fine for this to cover any dice still visible underneath since the turn's done.
+  let popoverContent: ReactNode = null;
+  if (turn.phase === 'farkled') {
+    popoverContent = (
+      <div className="farkle-banner board__popover-card">
+        <p>
+          💥 Farkle! No scoring dice -{' '}
+          {turn.playerId === 'human'
+            ? `you lose the ${turn.turnScore} points banked this turn.`
+            : `${players.computer.name} loses the ${turn.turnScore} points banked this turn.`}
+        </p>
+        {(isHumanTurn || pauseAfterComputerTurn) && (
+          <button type="button" className={continueBtnClassName} onClick={actions.continueTurn}>
+            {continueBtnLabel}
+          </button>
+        )}
+      </div>
+    );
+  } else if (turn.phase === 'turn-banked') {
+    popoverContent = (
+      <div className="turn-banked-banner board__popover-card">
+        <p>
+          🏦 {players[turn.playerId].name} banked {turn.turnScore} points this turn (total:{' '}
+          {players[turn.playerId].totalScore.toLocaleString()}).
+        </p>
+        {(isHumanTurn || pauseAfterComputerTurn) && (
+          <button type="button" className={continueBtnClassName} onClick={actions.continueTurn}>
+            {continueBtnLabel}
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="app__header">
@@ -126,6 +213,8 @@ export default function App() {
                 interactive={isHumanTurn && turn.phase === 'awaiting-selection'}
                 onToggle={actions.toggleDie}
                 showInitialPlaceholder={!hasRolledOnce}
+                controlsOverlay={controlsOverlay}
+                popover={popoverContent}
               />
               <HeldDiceRail
                 dice={turn.dice}
@@ -141,88 +230,6 @@ export default function App() {
             {turn.isHotDice && turn.phase !== 'farkled' && (
               <div className="hot-dice-banner">
                 <p>🔥 Hot dice! All 6 dice scored, so you get a fresh set of 6 to roll - your turn score is safe.</p>
-              </div>
-            )}
-
-            {turn.phase === 'farkled' && (
-              <div className="farkle-banner">
-                <p>
-                  💥 Farkle! No scoring dice -{' '}
-                  {turn.playerId === 'human'
-                    ? `you lose the ${turn.turnScore} points banked this turn.`
-                    : `${players.computer.name} loses the ${turn.turnScore} points banked this turn.`}
-                </p>
-                {(isHumanTurn || pauseAfterComputerTurn) && (
-                  <button type="button" className={continueBtnClassName} onClick={actions.continueTurn}>
-                    {continueBtnLabel}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {turn.phase === 'turn-banked' && (
-              <div className="turn-banked-banner">
-                <p>
-                  🏦 {players[turn.playerId].name} banked {turn.turnScore} points this turn (total:{' '}
-                  {players[turn.playerId].totalScore.toLocaleString()}).
-                </p>
-                {(isHumanTurn || pauseAfterComputerTurn) && (
-                  <button type="button" className={continueBtnClassName} onClick={actions.continueTurn}>
-                    {continueBtnLabel}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {isHumanTurn && (
-              <div className="controls">
-                {turn.phase === 'awaiting-roll' && (
-                  <button type="button" className="btn btn--primary" onClick={actions.roll}>
-                    {turn.isHotDice ? `🔥 Roll ${turn.diceToRoll} dice (Hot Dice!)` : `Roll ${turn.diceToRoll} dice`}
-                  </button>
-                )}
-
-                {turn.phase === 'awaiting-selection' && (
-                  <>
-                    {/* The valid case ("Held dice score N pts") is redundant now that the
-                     * held rail's footer and the button labels below both already show the
-                     * score, so only the invalid case has real text. The paragraph still
-                     * always renders (just visually hidden) so its line of space stays
-                     * reserved - otherwise the buttons below jump up/down as this message
-                     * appears and disappears while toggling dice. */}
-                    <p
-                      className="selection-status"
-                      aria-hidden={selectionValidity.valid}
-                      style={selectionValidity.valid ? { visibility: 'hidden' } : undefined}
-                    >
-                      {selectionValidity.valid ? '\u00A0' : selectionValidity.reason}
-                    </p>
-                    <div className="controls__row">
-                      <button
-                        type="button"
-                        className="btn btn--primary"
-                        disabled={!selectionValidity.valid}
-                        onClick={actions.roll}
-                      >
-                        <span className="btn__roll-full">{nextRollLabel}</span>
-                        <span className="btn__roll-short">{nextRollShortLabel}</span>
-                      </button>
-                      <button type="button" className="btn btn--bank" disabled={!canBank} onClick={actions.bank}>
-                        <span className="btn__bank-full">
-                          Bank {turn.turnScore + (selectionValidity.valid ? selectionValidity.score : 0)} pts & end
-                          turn
-                        </span>
-                        <span className="btn__bank-short">Bank & end turn</span>
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {turn.phase === 'awaiting-roll' && turn.turnScore > 0 && (
-                  <button type="button" className="btn btn--bank" disabled={!canBank} onClick={actions.bank}>
-                    Bank {turn.turnScore} pts & end turn
-                  </button>
-                )}
               </div>
             )}
 
