@@ -134,7 +134,14 @@ export function canBankTurn(game: GameState): boolean {
   return true;
 }
 
-/** Ends the current turn, banking points (if allowed) and switching to the other player. */
+/**
+ * Ends the current turn, banking points (if allowed). For the human, this switches
+ * straight to the other player (they were already present for every step of their
+ * own turn). For the computer, it instead pauses in the `turn-banked` phase - still
+ * the computer's turn, points already applied - so the human can review what just
+ * happened before clicking Continue (via `endFarkledTurn`, despite the name a
+ * generic "advance past this turn" step) to actually move on.
+ */
 export function bankTurn(game: GameState): GameState {
   if (!canBankTurn(game)) return game;
 
@@ -143,20 +150,40 @@ export function bankTurn(game: GameState): GameState {
   const updatedPlayer: PlayerState = { ...player, totalScore: newTotal };
   const winnerId = newTotal >= game.targetScore ? player.id : null;
 
-  const nextPlayerId: PlayerId = player.id === 'human' ? 'computer' : 'human';
+  if (winnerId) {
+    return {
+      ...game,
+      players: { ...game.players, [player.id]: updatedPlayer },
+      currentPlayerId: player.id,
+      turn: { ...game.turn, phase: 'game-over', log: [...game.turn.log, `${player.name} reached ${newTotal} points and wins!`] },
+      winnerId,
+    };
+  }
 
+  if (player.id === 'computer') {
+    return {
+      ...game,
+      players: { ...game.players, [player.id]: updatedPlayer },
+      turn: { ...game.turn, phase: 'turn-banked' },
+    };
+  }
+
+  const nextPlayerId: PlayerId = 'computer';
   return {
     ...game,
     players: { ...game.players, [player.id]: updatedPlayer },
-    currentPlayerId: winnerId ? player.id : nextPlayerId,
-    turn: winnerId
-      ? { ...game.turn, phase: 'game-over', log: [...game.turn.log, `${player.name} reached ${newTotal} points and wins!`] }
-      : emptyTurn(nextPlayerId),
+    currentPlayerId: nextPlayerId,
+    turn: emptyTurn(nextPlayerId),
     winnerId,
   };
 }
 
-/** Ends the current (Farkled) turn with no points banked, switching to the other player. */
+/**
+ * Advances past the current turn (no points banked, if it was a Farkle - the
+ * `turn-banked` phase already applied its points in `bankTurn`), switching to the
+ * other player. Used both for the human's Farkle "Continue" click and to move on
+ * after reviewing the computer's completed turn (banked or Farkled).
+ */
 export function endFarkledTurn(game: GameState): GameState {
   const nextPlayerId: PlayerId = game.turn.playerId === 'human' ? 'computer' : 'human';
   return { ...game, currentPlayerId: nextPlayerId, turn: emptyTurn(nextPlayerId) };

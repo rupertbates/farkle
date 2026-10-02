@@ -514,6 +514,19 @@ body {
   margin: 1rem 0;
 }
 
+.farkle-banner p,
+.turn-banked-banner p {
+  margin: 0 0 0.6rem;
+}
+
+.turn-banked-banner {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid var(--accent);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+}
+
 .hot-dice-banner {
   background: rgba(250, 204, 21, 0.15);
   border: 1px solid var(--gold);

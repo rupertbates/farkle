@@ -74,6 +74,12 @@ export function useFarkleGame(
         const validity = validateCurrentSelection(g.turn);
         if (!validity.valid) return g;
         const turn = applySelection(g.turn);
+        // On hot dice, stop at `awaiting-roll` instead of immediately rolling the
+        // fresh 6, so the "Hot dice!" banner is visible before that reroll (the
+        // player then clicks Roll again to actually throw the fresh dice).
+        if (turn.isHotDice) {
+          return { ...g, turn };
+        }
         return { ...g, turn: rollForTurn(turn) };
       }
       return g;
@@ -108,7 +114,9 @@ export function useFarkleGame(
     });
   }, []);
 
-  const farkleAcknowledged = useCallback(() => {
+  // Advances past the current turn (Farkled, or - for the computer - already
+  // banked and paused in `turn-banked`) once the human has reviewed it.
+  const continueTurn = useCallback(() => {
     setGame((g) => endFarkledTurn(g));
   }, []);
 
@@ -134,11 +142,10 @@ export function useFarkleGame(
       const timer = setTimeout(() => {
         setGame((g) => {
           if (g.currentPlayerId !== 'computer' || g.turn.phase !== 'awaiting-roll') return g;
-          const rolledTurn = rollForTurn(g.turn);
-          if (rolledTurn.phase === 'farkled') {
-            return endFarkledTurn({ ...g, turn: rolledTurn });
-          }
-          return { ...g, turn: rolledTurn };
+          // On a Farkle, stop here (phase becomes 'farkled') instead of immediately
+          // advancing, so the human can see the banner and click Continue - same as
+          // the end-of-turn review after the computer banks.
+          return { ...g, turn: rollForTurn(g.turn) };
         });
       }, computerMoveDelayMs);
       return () => clearTimeout(timer);
@@ -198,7 +205,7 @@ export function useFarkleGame(
       toggleDie,
       applyAdvisorSelection,
       bank,
-      farkleAcknowledged,
+      continueTurn,
       newGame,
     },
     canBank,

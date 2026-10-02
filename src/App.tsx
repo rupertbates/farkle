@@ -90,12 +90,27 @@ export default function App() {
 
             {turn.phase === 'farkled' && (
               <div className="farkle-banner">
-                <p>💥 Farkle! No scoring dice - you lose the {turn.turnScore} points banked this turn.</p>
-                {isHumanTurn && (
-                  <button type="button" className="btn" onClick={actions.farkleAcknowledged}>
-                    Continue
-                  </button>
-                )}
+                <p>
+                  💥 Farkle! No scoring dice -{' '}
+                  {turn.playerId === 'human'
+                    ? `you lose the ${turn.turnScore} points banked this turn.`
+                    : `${players.computer.name} loses the ${turn.turnScore} points banked this turn.`}
+                </p>
+                <button type="button" className="btn" onClick={actions.continueTurn}>
+                  Continue
+                </button>
+              </div>
+            )}
+
+            {turn.phase === 'turn-banked' && (
+              <div className="turn-banked-banner">
+                <p>
+                  🏦 {players[turn.playerId].name} banked {turn.turnScore} points this turn (total:{' '}
+                  {players[turn.playerId].totalScore.toLocaleString()}).
+                </p>
+                <button type="button" className="btn" onClick={actions.continueTurn}>
+                  Continue
+                </button>
               </div>
             )}
 
@@ -138,7 +153,7 @@ export default function App() {
               </div>
             )}
 
-            {!isHumanTurn && !isGameOver && (
+            {!isHumanTurn && !isGameOver && turn.phase !== 'farkled' && turn.phase !== 'turn-banked' && (
               <p className="computer-status">{computerStatus}</p>
             )}
 
