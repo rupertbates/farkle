@@ -86,7 +86,7 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
         </details>
         {!isComputerMode && (
           <button type="button" className="advisor__apply-btn" onClick={() => onApplySelection(best.candidate.indices)}>
-            Select these dice ({best.candidate.values.join(', ')}) for {best.candidate.result.score} pts
+            Select recommended dice
           </button>
         )}
       </div>
@@ -101,7 +101,12 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
               <li key={i} className="advisor__option-compact">
                 <div className="advisor__option-compact-row">
                   <span className="advisor__option-compact-label">
-                    {opt.candidate.label} - {opt.candidate.result.score} pts {opt.isHotDice && <span className="advisor__hot-dice-badge">🔥</span>}
+                    {/* The "take all" label already states its own dice and score, unlike the
+                     * "keep some, reroll the rest" labels which don't repeat the score. */}
+                    {opt.candidate.label}
+                    {!opt.candidate.label.includes(' pts') && ` - ${opt.candidate.result.score} pts`}
+                    {' '}
+                    {opt.isHotDice && <span className="advisor__hot-dice-badge">🔥</span>}
                   </span>
                   {!isComputerMode && (
                     <button

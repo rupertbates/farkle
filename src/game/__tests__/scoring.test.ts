@@ -93,7 +93,7 @@ describe('generateSelectionCandidates', () => {
     const dice: DieValue[] = [1, 1, 1, 5, 2, 3];
     const candidates = generateSelectionCandidates(dice);
     const labels = candidates.map((c) => c.label);
-    expect(labels).toContain('Take all scoring dice');
+    expect(labels).toContain('Take all scoring dice (1, 1, 1, 5) for 1,050 pts');
     expect(labels).toContain('Keep three 1s, reroll the rest');
   });
 
@@ -104,7 +104,7 @@ describe('generateSelectionCandidates', () => {
     const candidates = generateSelectionCandidates(dice);
     expect(candidates).toHaveLength(2);
 
-    const takeAll = candidates.find((c) => c.label === 'Take all scoring dice');
+    const takeAll = candidates.find((c) => c.label === 'Take all scoring dice (5, 5) for 100 pts');
     expect(takeAll).toMatchObject({ result: { score: 100 } });
     expect(takeAll?.indices).toHaveLength(2);
 
@@ -118,6 +118,6 @@ describe('generateSelectionCandidates', () => {
     const dice: DieValue[] = [1, 1, 1, 1, 1, 1];
     const candidates = generateSelectionCandidates(dice);
     expect(candidates).toHaveLength(1);
-    expect(candidates[0]).toMatchObject({ label: 'Take all scoring dice', result: { score: 8000 } });
+    expect(candidates[0]).toMatchObject({ label: 'Take all scoring dice (1, 1, 1, 1, 1, 1) for 8,000 pts', result: { score: 8000 } });
   });
 });

@@ -24,9 +24,9 @@ describe('App integration', () => {
 
     // All dice show 1s -> advisor should recommend taking all 6 (six of a kind of 1s = 8000).
     expect(await screen.findByText(/Advisor/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /select these dice/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select recommended dice/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /select these dice/i }));
+    fireEvent.click(screen.getByRole('button', { name: /select recommended dice/i }));
 
     expect(await screen.findByText(/Bank 8,?000 pts & end turn/)).toBeInTheDocument();
   });

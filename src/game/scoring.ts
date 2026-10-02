@@ -162,10 +162,15 @@ export function findBestSelection(values: DieValue[]): {
  * instruction). Any die that doesn't contribute to a score is never part of
  * `bestIndices` in the first place (the greedy `findBestSelection` already captures
  * every scoring die), so every valid subset is necessarily a subset of `bestIndices`.
+ *
+ * Unlike the partial-keep case below (which already names the dice by value and count,
+ * e.g. "three 1s"), "take everything" doesn't otherwise say *which* dice that means - so
+ * it's spelled out explicitly here, along with the score, rather than leaving that only
+ * in the apply button's text.
  */
-function describeSelection(values: DieValue[], bestIndices: number[], indices: number[]): string {
+function describeSelection(values: DieValue[], bestIndices: number[], indices: number[], subsetValues: DieValue[], score: number): string {
   if (indices.length === bestIndices.length) {
-    return 'Take all scoring dice';
+    return `Take all scoring dice (${subsetValues.join(', ')}) for ${score.toLocaleString()} pts`;
   }
 
   const countInBest = (value: DieValue) => bestIndices.filter((i) => values[i] === value).length;
@@ -233,7 +238,7 @@ export function generateSelectionCandidates(values: DieValue[]): SelectionCandid
       indices,
       values: subsetValues,
       result,
-      label: describeSelection(values, bestIndices, indices),
+      label: describeSelection(values, bestIndices, indices, subsetValues, result.score),
     });
   }
 
