@@ -33,6 +33,11 @@ to the player via any UI control. `App.tsx` currently hardcodes their defaults.
     pass and may need tuning once this is player-facing.
   - Suggested UI: a simple toggle, e.g. "Risk-aware advice" or "Consider game state", off
     by default to preserve the original pure-EV behavior.
+- **Pause after computer turn** - `useFarkleGame(targetScore, computerMoveDelayMs, riskAwareness, pauseAfterComputerTurn)`
+  (boolean, defaults to `false`). When enabled, the game pauses after the computer's
+  turn until the player clicks "Continue". This is useful for
+  players who want to study the advisor's reasoning before moving on.
+  - Suggested UI: a simple toggle, e.g. "Pause after computer turn", off by default.
 
 ## Not yet implemented (ideas only)
 
