@@ -34,7 +34,10 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1>🎲 Farkle</h1>
+        <h1>
+          <span aria-hidden="true">🎲</span> <span className="app__header-wordmark">Farkle</span>
+        </h1>
+        <div className="app__header-underline" />
         <p className="app__subtitle">Play to {targetScore.toLocaleString()} points against the computer</p>
       </header>
 
@@ -55,12 +58,6 @@ export default function App() {
 
       {!isGameOver && (
         <main className="app__main">
-          <section className="panel panel--scoring">
-            <CollapsiblePanel title="📖 Scoring guide" storageKey="farkle:panel:scoring-open" defaultOpen={false}>
-              <ScoringChart />
-            </CollapsiblePanel>
-          </section>
-
           <section className="panel panel--table">
             <h2>{isHumanTurn ? 'Your turn' : "Computer's turn"}</h2>
 
@@ -160,26 +157,34 @@ export default function App() {
             <TurnLog log={turn.log} />
           </section>
 
-          <section className="panel panel--advisor">
-            <CollapsiblePanel
-              title={isHumanTurn ? '🧭 Advisor' : "🧭 Computer's reasoning"}
-              storageKey="farkle:panel:advisor-open"
-              defaultOpen={true}
-            >
-              {turn.phase === 'awaiting-selection' ? (
-                <AdvisorPanel
-                  report={advisorReport}
-                  onApplySelection={actions.applyAdvisorSelection}
-                  mode={isHumanTurn ? 'human' : 'computer'}
-                  computerDecision={computerDecision}
-                />
-              ) : (
-                <div className="advisor advisor--empty">
-                  <p>Advice appears here after a roll, showing the best dice to keep and win probabilities.</p>
-                </div>
-              )}
-            </CollapsiblePanel>
-          </section>
+          <aside className="app__sidebar">
+            <section className="panel panel--advisor">
+              <CollapsiblePanel
+                title={isHumanTurn ? '🧭 Advisor' : "🧭 Computer's reasoning"}
+                storageKey="farkle:panel:advisor-open"
+                defaultOpen={true}
+              >
+                {turn.phase === 'awaiting-selection' ? (
+                  <AdvisorPanel
+                    report={advisorReport}
+                    onApplySelection={actions.applyAdvisorSelection}
+                    mode={isHumanTurn ? 'human' : 'computer'}
+                    computerDecision={computerDecision}
+                  />
+                ) : (
+                  <div className="advisor advisor--empty">
+                    <p>Advice appears here after a roll, showing the best dice to keep and win probabilities.</p>
+                  </div>
+                )}
+              </CollapsiblePanel>
+            </section>
+
+            <section className="panel panel--scoring">
+              <CollapsiblePanel title="📖 Scoring guide" storageKey="farkle:panel:scoring-open" defaultOpen={false}>
+                <ScoringChart />
+              </CollapsiblePanel>
+            </section>
+          </aside>
         </main>
       )}
     </div>

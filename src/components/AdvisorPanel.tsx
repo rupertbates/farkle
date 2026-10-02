@@ -81,12 +81,12 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
           </p>
         )}
         <div className="advisor__ev-row">
-          <div className={`advisor__ev-stat${best.recommendedAction === 'bank' ? ' advisor__ev-stat--chosen' : ''}`}>
+          <div className={`advisor__ev-stat${best.recommendedAction === 'bank' ? ' advisor__ev-stat--chosen-bank' : ''}`}>
             <span className="advisor__ev-stat-label">Bank now</span>
             <span className="advisor__ev-stat-value">{Math.round(best.bank.expectedValue).toLocaleString()} pts</span>
             <span className="advisor__ev-stat-note">certain</span>
           </div>
-          <div className={`advisor__ev-stat${best.recommendedAction === 'continue' ? ' advisor__ev-stat--chosen' : ''}`}>
+          <div className={`advisor__ev-stat${best.recommendedAction === 'continue' ? ' advisor__ev-stat--chosen-continue' : ''}`}>
             <span className="advisor__ev-stat-label">Keep rolling ({numberWord(best.diceRemainingIfContinuing)} dice)</span>
             <span className="advisor__ev-stat-value">~{Math.round(best.continue.expectedValue).toLocaleString()} pts</span>
             <span className="advisor__ev-stat-note advisor__ev-stat-note--risk">average, {(best.farkleProbabilityIfContinuing * 100).toFixed(1)}% farkle risk</span>
@@ -136,11 +136,11 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
                   )}
                 </div>
                 <p className="advisor__option-compact-stats">
-                  <span className={opt.recommendedAction === 'bank' ? 'advisor__ev--chosen' : ''}>
+                  <span className={opt.recommendedAction === 'bank' ? 'advisor__ev--chosen-bank' : ''}>
                     Bank: {Math.round(opt.bank.expectedValue).toLocaleString()} pts
                   </span>
                   {' · '}
-                  <span className={opt.recommendedAction === 'continue' ? 'advisor__ev--chosen' : ''}>
+                  <span className={opt.recommendedAction === 'continue' ? 'advisor__ev--chosen-continue' : ''}>
                     Keep rolling ({numberWord(opt.diceRemainingIfContinuing)} dice): ~{Math.round(opt.continue.expectedValue).toLocaleString()} pts avg
                   </span>
                   {' · '}
