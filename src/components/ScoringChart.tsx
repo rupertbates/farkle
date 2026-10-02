@@ -7,9 +7,9 @@ const ROWS: { combo: string; points: string }[] = [
   { combo: 'Three 4s', points: '400' },
   { combo: 'Three 5s', points: '500' },
   { combo: 'Three 6s', points: '600' },
-  { combo: 'Four of a kind', points: '2 x three-of-a-kind' },
-  { combo: 'Five of a kind', points: '4 x three-of-a-kind' },
-  { combo: 'Six of a kind', points: '8 x three-of-a-kind' },
+  { combo: 'Four of a kind', points: '2× triple' },
+  { combo: 'Five of a kind', points: '4× triple' },
+  { combo: 'Six of a kind', points: '8× triple' },
   { combo: 'Straight (1-6)', points: '1,500' },
   { combo: 'Three pairs', points: '1,500' },
 ];
@@ -18,7 +18,6 @@ const ROWS: { combo: string; points: string }[] = [
 export function ScoringChart() {
   return (
     <div className="scoring-chart">
-      <h4>Scoring guide</h4>
       <table className="scoring-chart__table">
         <thead>
           <tr>

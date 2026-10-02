@@ -152,6 +152,43 @@ body {
   padding: 1.25rem;
 }
 
+/* Shared collapse/expand chrome for the scoring guide and advisor panels - both are
+ * useful but not something every player wants taking up space on every single roll, so
+ * they share one clickable header that toggles visibility and remembers the choice. */
+.collapsible-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.collapsible-panel__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.collapsible-panel__chevron {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  transition: transform 0.15s ease;
+}
+
+.collapsible-panel__header:hover .collapsible-panel__title {
+  color: var(--accent);
+}
+
+.collapsible-panel__body {
+  margin-top: 0.9rem;
+}
+
 .board-row {
   display: flex;
   gap: 1.25rem;
@@ -271,14 +308,6 @@ body {
 
 .scoring-chart {
   font-size: 0.85rem;
-}
-
-.scoring-chart h4 {
-  margin: 0 0 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
-  font-size: 0.9rem;
 }
 
 .scoring-chart__table {
@@ -506,10 +535,6 @@ body {
 
 .advisor--empty {
   color: var(--text-dim);
-}
-
-.advisor h3 {
-  margin-top: 0;
 }
 
 .advisor__win-callout {

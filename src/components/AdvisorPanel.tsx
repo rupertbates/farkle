@@ -39,7 +39,6 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
   if (!report) {
     return (
       <div className="advisor advisor--empty">
-        <h3>Advisor</h3>
         <p>
           {isComputerMode
             ? "Waiting for the computer to roll…"
@@ -56,7 +55,6 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
 
   return (
     <div className="advisor">
-      <h3>{isComputerMode ? "Computer's reasoning" : 'Advisor'}</h3>
       {isComputerMode && !computerDecision && (
         <p className="advisor__computer-status">🤔 Computer is weighing its options…</p>
       )}

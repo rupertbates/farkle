@@ -6,6 +6,7 @@ import { HeldDiceRail } from './components/HeldDiceRail';
 import { ScoringChart } from './components/ScoringChart';
 import { ScoreBoard } from './components/ScoreBoard';
 import { AdvisorPanel } from './components/AdvisorPanel';
+import { CollapsiblePanel } from './components/CollapsiblePanel';
 import { TurnLog } from './components/TurnLog';
 import './App.css';
 
@@ -55,7 +56,9 @@ export default function App() {
       {!isGameOver && (
         <main className="app__main">
           <section className="panel panel--scoring">
-            <ScoringChart />
+            <CollapsiblePanel title="📖 Scoring guide" storageKey="farkle:panel:scoring-open" defaultOpen={false}>
+              <ScoringChart />
+            </CollapsiblePanel>
           </section>
 
           <section className="panel panel--table">
@@ -143,19 +146,24 @@ export default function App() {
           </section>
 
           <section className="panel panel--advisor">
-            {turn.phase === 'awaiting-selection' ? (
-              <AdvisorPanel
-                report={advisorReport}
-                onApplySelection={actions.applyAdvisorSelection}
-                mode={isHumanTurn ? 'human' : 'computer'}
-                computerDecision={computerDecision}
-              />
-            ) : (
-              <div className="advisor advisor--empty">
-                <h3>Advisor</h3>
-                <p>Advice appears here after a roll, showing the best dice to keep and win probabilities.</p>
-              </div>
-            )}
+            <CollapsiblePanel
+              title={isHumanTurn ? '🧭 Advisor' : "🧭 Computer's reasoning"}
+              storageKey="farkle:panel:advisor-open"
+              defaultOpen={true}
+            >
+              {turn.phase === 'awaiting-selection' ? (
+                <AdvisorPanel
+                  report={advisorReport}
+                  onApplySelection={actions.applyAdvisorSelection}
+                  mode={isHumanTurn ? 'human' : 'computer'}
+                  computerDecision={computerDecision}
+                />
+              ) : (
+                <div className="advisor advisor--empty">
+                  <p>Advice appears here after a roll, showing the best dice to keep and win probabilities.</p>
+                </div>
+              )}
+            </CollapsiblePanel>
           </section>
         </main>
       )}
