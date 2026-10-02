@@ -199,6 +199,11 @@ body {
 @media (max-width: 640px) {
   .board-row {
     flex-direction: column;
+    /* align-items only governs cross-axis sizing, which is vertical in the default row
+     * layout (so flex-start just stops the board/held-rail being stretched to equal
+     * heights) but becomes horizontal once stacked into a column above - "flex-start"
+     * there instead shrinks both to their content's width. Stretch restores full width. */
+    align-items: stretch;
   }
 }
 
@@ -254,6 +259,23 @@ body {
    * board and/or (via align-items: stretch upstream) squashing the board out of square. */
   max-height: min(560px, 70vh);
   overflow-y: auto;
+}
+
+/* In a row layout, a flex-basis of 0/150px just sets a starting *width* that flex-grow
+ * expands from - but once .board-row switches to a column direction on mobile (see the
+ * @media block above), that same basis becomes a *height* instead, collapsing the board
+ * to ~0px tall (its content is positioned absolutely, so it doesn't push height back
+ * out) and giving the held rail a bizarre fixed 150px height regardless of content.
+ * Switching both to an auto basis once stacked lets them size to their actual content
+ * again (the board via its aspect-ratio, the held rail via its dice/max-height cap). */
+@media (max-width: 640px) {
+  .board {
+    flex-basis: auto;
+  }
+
+  .held-rail {
+    flex-basis: auto;
+  }
 }
 
 .held-rail h4 {
