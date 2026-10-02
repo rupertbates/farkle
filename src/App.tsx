@@ -175,11 +175,11 @@ export default function App() {
 
                 {turn.phase === 'awaiting-selection' && (
                   <>
-                    <p className="selection-status">
-                      {selectionValidity.valid
-                        ? `Held dice score ${selectionValidity.score} pts - roll again or bank`
-                        : selectionValidity.reason}
-                    </p>
+                    {/* The valid case ("Held dice score N pts") is redundant now that the
+                     * held rail's footer and the button labels below both already show the
+                     * score - only the invalid case earns its place, explaining why rolling
+                     * or banking is currently blocked. */}
+                    {!selectionValidity.valid && <p className="selection-status">{selectionValidity.reason}</p>}
                     <div className="controls__row">
                       <button
                         type="button"
