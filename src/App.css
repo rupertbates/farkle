@@ -265,6 +265,76 @@ body {
      * there instead shrinks both to their content's width. Stretch restores full width. */
     align-items: stretch;
   }
+
+  /* Condense the game-score panel and the board panel's heading/padding so more of the
+   * board (and ideally the start of the advisor below it) fits above the fold on a
+   * phone without scrolling - neither needs anywhere near as much breathing room as
+   * desktop once the player already knows the layout. */
+  .scoreboard {
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .scoreboard__player {
+    padding: 0.2rem;
+  }
+
+  .scoreboard__player h3 {
+    font-size: 0.8rem;
+    margin: 0 0 0.1rem;
+  }
+
+  .scoreboard__total {
+    font-size: 1.2rem;
+  }
+
+  .scoreboard__middle {
+    padding: 0 0.6rem;
+  }
+
+  .scoreboard__target {
+    font-size: 0.65rem;
+  }
+
+  .panel--table {
+    padding: 0.5rem 1.25rem 0.85rem;
+  }
+
+  .panel--table h2 {
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
+  }
+
+  /* The outer page padding, header, and the gaps around the board itself all add up
+   * fast on a short phone screen - trim them too so the board and as much of the
+   * advisor below it as possible can fit without scrolling. */
+  .app {
+    padding: 0.75rem 1.5rem;
+  }
+
+  .app__header {
+    margin-bottom: 0.5rem;
+  }
+
+  .app__header h1 {
+    font-size: 1.5rem;
+  }
+
+  .app__header-underline {
+    margin: 0 auto 0.4rem;
+  }
+
+  .app__subtitle {
+    font-size: 0.8rem;
+  }
+
+  .board-row {
+    margin: 0.5rem 0;
+  }
+
+  .controls {
+    margin: 0.5rem 0;
+  }
 }
 
 .board {
@@ -369,6 +439,17 @@ body {
 
   .held-rail__group {
     flex: 0 0 auto;
+  }
+
+  /* Tighten the tray's own padding/gaps too, on top of the row-wrapping above, so it
+   * takes less vertical space below the board before the roll/bank buttons appear. */
+  .held-rail {
+    padding: 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .held-rail h4 {
+    margin-bottom: 0.15rem;
   }
 }
 
