@@ -78,6 +78,11 @@ export default function App() {
   const nextTurnIsHuman = turn.playerId === 'computer';
   const continueBtnLabel = nextTurnIsHuman ? 'Roll 6 dice' : 'Continue';
   const continueBtnClassName = nextTurnIsHuman ? 'btn btn--primary' : 'btn';
+  // While the computer's end-of-turn popover (Farkle/banked) is showing, its analysis
+  // panel has nothing left to say about a turn that's already over - hide it so that
+  // space goes to the board/popover instead. Applies on all breakpoints for now; may
+  // become mobile-only later once the user's had a chance to compare.
+  const hideComputerAnalysis = !isHumanTurn && (turn.phase === 'farkled' || turn.phase === 'turn-banked');
 
   let computerStatus = 'Computer is playing…';
   if (!isHumanTurn && !isGameOver) {
@@ -247,26 +252,28 @@ export default function App() {
           </section>
 
           <aside className="app__sidebar">
-            <section className="panel panel--advisor">
-              <CollapsiblePanel
-                title={isHumanTurn ? '🧭 Advisor' : "🤖 Computer's analysis"}
-                storageKey="farkle:panel:advisor-open"
-                defaultOpen={true}
-              >
-                {turn.phase === 'awaiting-selection' ? (
-                  <AdvisorPanel
-                    report={advisorReport}
-                    onApplySelection={actions.applyAdvisorSelection}
-                    mode={isHumanTurn ? 'human' : 'computer'}
-                    computerDecision={computerDecision}
-                  />
-                ) : (
-                  <div className="advisor advisor--empty">
-                    <p>Advice appears here after a roll, showing the best dice to keep and win probabilities.</p>
-                  </div>
-                )}
-              </CollapsiblePanel>
-            </section>
+            {!hideComputerAnalysis && (
+              <section className="panel panel--advisor">
+                <CollapsiblePanel
+                  title={isHumanTurn ? '🧭 Advisor' : "🤖 Computer's analysis"}
+                  storageKey="farkle:panel:advisor-open"
+                  defaultOpen={true}
+                >
+                  {turn.phase === 'awaiting-selection' ? (
+                    <AdvisorPanel
+                      report={advisorReport}
+                      onApplySelection={actions.applyAdvisorSelection}
+                      mode={isHumanTurn ? 'human' : 'computer'}
+                      computerDecision={computerDecision}
+                    />
+                  ) : (
+                    <div className="advisor advisor--empty">
+                      <p>Advice appears here after a roll, showing the best dice to keep and win probabilities.</p>
+                    </div>
+                  )}
+                </CollapsiblePanel>
+              </section>
+            )}
 
             <section className="panel panel--turnlog">
               <CollapsiblePanel title="📜 This turn" storageKey="farkle:panel:turnlog-open" defaultOpen={true}>
