@@ -637,6 +637,30 @@ body {
   margin: 0 0 0.5rem;
 }
 
+/* The longer plain-English reasoning behind a recommendation is useful but verbose -
+ * tucked behind a "Show reasoning" disclosure so the headline recommendation, EV
+ * numbers, and Farkle risk (the bits worth seeing at a glance on every single roll)
+ * aren't crowded out by a paragraph of prose underneath them each time. */
+.advisor__reasoning {
+  margin-top: 0.5rem;
+}
+
+.advisor__reasoning summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  user-select: none;
+}
+
+.advisor__reasoning summary:hover {
+  color: var(--text);
+}
+
+.advisor__reasoning .advisor__explanation,
+.advisor__reasoning .advisor__risk-note {
+  margin-top: 0.5rem;
+}
+
 /* Alternative options are secondary to the one recommendation above, so they're tucked
  * behind a <details> disclosure as compact single-line rows rather than full repeated
  * paragraphs - keeping the panel scannable even when a roll offers many viable

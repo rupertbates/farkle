@@ -47,7 +47,10 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
           <p className="advisor__computer-decision-label">
             💻 Computer {computerDecision.action === 'bank' ? 'will bank' : 'will keep rolling'}
           </p>
-          <p className="advisor__explanation">{computerDecision.reasoning}</p>
+          <details className="advisor__reasoning">
+            <summary>Show reasoning</summary>
+            <p className="advisor__explanation">{computerDecision.reasoning}</p>
+          </details>
         </div>
       )}
       {wouldWinByBanking && (
@@ -72,12 +75,15 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
         <p className="advisor__farkle-prob">
           Farkle risk if continuing: {(best.farkleProbabilityIfContinuing * 100).toFixed(1)}%
         </p>
-        <p className="advisor__explanation">
-          {best.recommendedAction === 'bank' ? best.bank.explanation : best.continue.explanation}
-        </p>
-        {best.riskAdjustmentExplanation && (
-          <p className="advisor__risk-note">⚖️ Adjusted for game state: {best.riskAdjustmentExplanation}.</p>
-        )}
+        <details className="advisor__reasoning">
+          <summary>Show reasoning</summary>
+          <p className="advisor__explanation">
+            {best.recommendedAction === 'bank' ? best.bank.explanation : best.continue.explanation}
+          </p>
+          {best.riskAdjustmentExplanation && (
+            <p className="advisor__risk-note">⚖️ Adjusted for game state: {best.riskAdjustmentExplanation}.</p>
+          )}
+        </details>
         {!isComputerMode && (
           <button type="button" className="advisor__apply-btn" onClick={() => onApplySelection(best.candidate.indices)}>
             Select these dice ({best.candidate.values.join(', ')}) for {best.candidate.result.score} pts
