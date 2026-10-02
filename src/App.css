@@ -178,12 +178,23 @@ body {
     order: 2;
   }
 
+  /* Every sidebar panel needs an explicit order here - flex items default to order: 0,
+   * so any panel left unset (This turn, Settings) would sort before these two and
+   * scramble the intended Advisor -> This turn -> Scoring -> Settings sequence. */
   .panel--advisor {
     order: 1;
   }
 
-  .panel--scoring {
+  .panel--turnlog {
     order: 2;
+  }
+
+  .panel--scoring {
+    order: 3;
+  }
+
+  .panel--settings {
+    order: 4;
   }
 }
 
