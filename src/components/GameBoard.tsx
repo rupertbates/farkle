@@ -9,6 +9,10 @@ export interface GameBoardProps {
   dice: DieValue[];
   /** Indices within `dice` the player has held (set aside) this roll. */
   selectedIndices: number[];
+  /** Indices within `dice` already locked in earlier this same roll - kept out of
+   *  view here since they're shown as a locked group in the held rail instead, but
+   *  distinct from dice that were simply never selected (which stay visible). */
+  committedIndices: number[];
   /** Increments per roll; used to key/animate a fresh throw and to link up with the held rail. */
   rollId: number;
   interactive: boolean;
@@ -64,7 +68,15 @@ function layoutDice(count: number): DieLayout[] {
  * replacing the board itself. Dice that are "held" share a layoutId with their twin in
  * the HeldDiceRail, so framer-motion slides them across to the side when toggled.
  */
-export function GameBoard({ dice, selectedIndices, rollId, interactive, onToggle, showInitialPlaceholder }: GameBoardProps) {
+export function GameBoard({
+  dice,
+  selectedIndices,
+  committedIndices,
+  rollId,
+  interactive,
+  onToggle,
+  showInitialPlaceholder,
+}: GameBoardProps) {
   // Scattered resting positions/rotations per die, computed once per roll (keyed by
   // rollId) so re-renders (e.g. toggling a hold) don't recompute/replay the throw.
   const layout = useMemo(
@@ -75,7 +87,7 @@ export function GameBoard({ dice, selectedIndices, rollId, interactive, onToggle
 
   const liveDice = dice
     .map((value, index) => ({ value, index }))
-    .filter(({ index }) => !selectedIndices.includes(index));
+    .filter(({ index }) => !selectedIndices.includes(index) && !committedIndices.includes(index));
 
   // Dice that can't contribute to any valid combo this roll (e.g. a lone 2, 3, 4 or 6)
   // should be inert - clicking them can never produce a valid selection, so there's no
@@ -89,7 +101,7 @@ export function GameBoard({ dice, selectedIndices, rollId, interactive, onToggle
           <p className="board__placeholder">🎲 Roll to throw the dice onto the board</p>
         )}
 
-        {dice.length > 0 && liveDice.length === 0 && (
+        {interactive && dice.length > 0 && liveDice.length === 0 && (
           <p className="board__placeholder">All dice held - lock them in or bank your turn</p>
         )}
 

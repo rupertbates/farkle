@@ -56,6 +56,12 @@ export interface TurnState {
   dice: DieValue[];
   /** Indices within `dice` that the player has selected/locked this roll. */
   selectedIndices: number[];
+  /** Indices within `dice` already locked in earlier this same roll (moved into
+   *  `heldGroups`). Kept so any dice the player chose *not* to hold stay visible on
+   *  the board for the rest of the roll (e.g. during the computer's end-of-turn
+   *  review pause) instead of vanishing the instant a selection is locked in. Reset
+   *  whenever a fresh roll actually replaces `dice`. */
+  committedIndices: number[];
   /** Points banked so far this turn (not yet added to total score). */
   turnScore: number;
   /** Number of dice that must be rerolled next (6 when starting a turn or on hot dice). */

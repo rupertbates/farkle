@@ -17,6 +17,7 @@ function emptyTurn(playerId: PlayerId): TurnState {
     playerId,
     dice: [],
     selectedIndices: [],
+    committedIndices: [],
     turnScore: 0,
     diceToRoll: 6,
     isHotDice: false,
@@ -52,6 +53,7 @@ export function rollForTurn(turn: TurnState, rng?: () => number): TurnState {
       ...turn,
       dice,
       selectedIndices: [],
+      committedIndices: [],
       rollId,
       isHotDice: false,
       phase: 'farkled',
@@ -62,7 +64,7 @@ export function rollForTurn(turn: TurnState, rng?: () => number): TurnState {
   // The hot-dice bonus applies only to the roll it triggered; once that roll has
   // happened, clear the flag so the "Hot dice!" banner doesn't linger and get
   // mistaken for a claim about this new roll's results.
-  return { ...turn, dice, selectedIndices: [], rollId, isHotDice: false, phase: 'awaiting-selection', log };
+  return { ...turn, dice, selectedIndices: [], committedIndices: [], rollId, isHotDice: false, phase: 'awaiting-selection', log };
 }
 
 /** Toggles whether a rolled die (by index) is part of the current selection. */
@@ -117,8 +119,12 @@ export function applySelection(turn: TurnState): TurnState {
   return {
     ...turn,
     turnScore: turn.turnScore + validity.score,
-    dice: [],
+    // `dice` itself is left untouched here (not cleared) - any die not part of this
+    // selection should keep showing on the board rather than vanishing. The board
+    // hides committed indices instead (see `committedIndices` below); the next real
+    // roll (or a fresh turn) replaces `dice` wholesale and clears this list.
     selectedIndices: [],
+    committedIndices: [...turn.committedIndices, ...turn.selectedIndices],
     diceToRoll,
     isHotDice,
     heldGroups: [...turn.heldGroups, selectedValues],

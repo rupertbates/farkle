@@ -113,6 +113,7 @@ export default function App() {
               <GameBoard
                 dice={turn.dice}
                 selectedIndices={turn.selectedIndices}
+                committedIndices={turn.committedIndices}
                 rollId={turn.rollId}
                 interactive={isHumanTurn && turn.phase === 'awaiting-selection'}
                 onToggle={actions.toggleDie}
