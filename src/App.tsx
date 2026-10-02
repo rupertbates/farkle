@@ -108,6 +108,7 @@ export default function App() {
                 rollId={turn.rollId}
                 interactive={isHumanTurn && turn.phase === 'awaiting-selection'}
                 onToggle={actions.toggleDie}
+                turnScore={turn.turnScore}
               />
             </div>
 

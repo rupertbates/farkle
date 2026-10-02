@@ -114,12 +114,6 @@ body {
   margin: 0.25rem 0 0;
 }
 
-.scoreboard__turn-score {
-  font-size: 0.85rem;
-  color: var(--gold);
-  margin: 0.25rem 0 0;
-}
-
 .scoreboard__middle {
   flex: 0 0 auto;
   text-align: center;
@@ -298,10 +292,20 @@ body {
   background: linear-gradient(165deg, rgba(13, 110, 63, 0.25) 0%, rgba(6, 67, 31, 0.25) 100%);
   border: 2px solid #5a3a22;
   box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.3);
-  /* Caps at the board's own max height (it's square, so max-width == max-height) so a
-   * turn with lots of held dice scrolls internally instead of growing taller than the
-   * board and/or (via align-items: stretch upstream) squashing the board out of square. */
+  /* Caps the whole tray at the board's own max height (it's square, so max-width ==
+   * max-height) so it never grows taller than the board / squashes it out of square. */
   max-height: min(560px, 70vh);
+}
+
+/* Holds the title + held-dice groups and scrolls internally on a turn with lots of held
+ * dice, while the turn-score footer below stays pinned and always visible rather than
+ * scrolling out of view with the dice. */
+.held-rail__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
   overflow-y: auto;
 }
 
@@ -370,6 +374,33 @@ body {
   font-size: 0.75rem;
   color: #fbbf24;
   font-style: italic;
+}
+
+/* Pinned footer showing the running turn score. Consolidates what used to be a
+ * "Turn score" line in the scoreboard header - previously it only appeared under
+ * whichever player's column was active, which changed that column's height turn to
+ * turn and made the whole page jump. Living here, it's always present in the same
+ * place regardless of whose turn it is. */
+.held-rail__turn-score {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.held-rail__turn-score-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .scoring-chart {
