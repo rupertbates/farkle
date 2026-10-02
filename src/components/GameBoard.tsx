@@ -13,6 +13,10 @@ export interface GameBoardProps {
   rollId: number;
   interactive: boolean;
   onToggle: (index: number) => void;
+  /** Shows the "Roll to throw the dice onto the board" hint when the board is empty.
+   *  Only true before the very first roll of a new game - every other empty board
+   *  (the start of each subsequent turn) stays blank instead of repeating the hint. */
+  showInitialPlaceholder: boolean;
 }
 
 interface DieLayout {
@@ -60,7 +64,7 @@ function layoutDice(count: number): DieLayout[] {
  * replacing the board itself. Dice that are "held" share a layoutId with their twin in
  * the HeldDiceRail, so framer-motion slides them across to the side when toggled.
  */
-export function GameBoard({ dice, selectedIndices, rollId, interactive, onToggle }: GameBoardProps) {
+export function GameBoard({ dice, selectedIndices, rollId, interactive, onToggle, showInitialPlaceholder }: GameBoardProps) {
   // Scattered resting positions/rotations per die, computed once per roll (keyed by
   // rollId) so re-renders (e.g. toggling a hold) don't recompute/replay the throw.
   const layout = useMemo(
@@ -81,7 +85,9 @@ export function GameBoard({ dice, selectedIndices, rollId, interactive, onToggle
   return (
     <div className="board">
       <div className="board__felt">
-        {dice.length === 0 && <p className="board__placeholder">🎲 Roll to throw the dice onto the board</p>}
+        {dice.length === 0 && showInitialPlaceholder && (
+          <p className="board__placeholder">🎲 Roll to throw the dice onto the board</p>
+        )}
 
         {dice.length > 0 && liveDice.length === 0 && (
           <p className="board__placeholder">All dice held - lock them in or bank your turn</p>

@@ -27,6 +27,10 @@ export default function App() {
   const [pauseAfterComputerTurn, setPauseAfterComputerTurn] = useState(() =>
     readStoredBoolean(PAUSE_AFTER_COMPUTER_TURN_KEY, true),
   );
+  // Tracks whether any dice have ever been rolled in this game (across every turn), so
+  // the board's "Roll to throw the dice" placeholder can be shown only once, at the
+  // very start of a new game, rather than reappearing at the start of every turn.
+  const [hasRolledOnce, setHasRolledOnce] = useState(false);
 
   const togglePauseAfterComputerTurn = () => {
     setPauseAfterComputerTurn((prev) => {
@@ -48,6 +52,17 @@ export default function App() {
   );
 
   const { turn, players, winnerId } = game;
+
+  // Derived during render (not an effect) so the flag flips in the same render the first
+  // roll's dice arrive, instead of one render later.
+  if (turn.dice.length > 0 && !hasRolledOnce) {
+    setHasRolledOnce(true);
+  }
+
+  const handleNewGame = () => {
+    setHasRolledOnce(false);
+    actions.newGame();
+  };
   const isGameOver = turn.phase === 'game-over';
 
   const diceLeftIfRolled = turn.dice.length - turn.selectedIndices.length;
@@ -82,7 +97,7 @@ export default function App() {
             Final score - You: {players.human.totalScore.toLocaleString()}, Computer:{' '}
             {players.computer.totalScore.toLocaleString()}
           </p>
-          <button type="button" className="btn btn--primary" onClick={actions.newGame}>
+          <button type="button" className="btn btn--primary" onClick={handleNewGame}>
             Play again
           </button>
         </div>
@@ -100,6 +115,7 @@ export default function App() {
                 rollId={turn.rollId}
                 interactive={isHumanTurn && turn.phase === 'awaiting-selection'}
                 onToggle={actions.toggleDie}
+                showInitialPlaceholder={!hasRolledOnce}
               />
               <HeldDiceRail
                 dice={turn.dice}
