@@ -142,6 +142,26 @@ export function useFarkleGame(
     setGame(resetGame(targetScore));
   }, [targetScore]);
 
+  // After the human locks in a selection that scores with all 6 dice ("hot dice"),
+  // the turn pauses briefly at `awaiting-roll` just long enough to flash the "Hot
+  // dice!" banner (same `rollForTurn` always clears `isHotDice` the instant it
+  // actually re-rolls, so this pause is the only moment it's visible) before
+  // automatically throwing the fresh 6 dice - the player shouldn't have to click
+  // "Roll" a second time just to continue a turn they already chose to keep rolling.
+  useEffect(() => {
+    if (game.turn.playerId !== 'human' || game.turn.phase !== 'awaiting-roll' || !game.turn.isHotDice) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      setGame((g) => {
+        if (g.turn.playerId !== 'human' || g.turn.phase !== 'awaiting-roll' || !g.turn.isHotDice) return g;
+        return { ...g, turn: rollForTurn(g.turn) };
+      });
+    }, computerMoveDelayMs);
+    return () => clearTimeout(timer);
+  }, [game.turn.playerId, game.turn.phase, game.turn.isHotDice, computerMoveDelayMs]);
+
   // Automatically steps the computer's turn forward in distinct, delayed stages so
   // each part of its decision can be followed rather than resolving instantly:
   //   1. roll the dice (after `computerMoveDelayMs`)
