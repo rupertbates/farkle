@@ -94,17 +94,30 @@ function useOverlayReservePct(
   return active ? pct : 0;
 }
 
+interface RawDieLayout {
+  /** Resting horizontal position as a percentage of the board, from its center. */
+  leftPct: number;
+  /** Resting vertical position as a percentage *of the usable (unreserved) height*,
+   *  i.e. before `reserveTopPct`/`reserveBottomPct` are applied - kept separate from
+   *  the reserve calculation (see `applyReserve`) so dice never need to be
+   *  re-shuffled into new cells/positions just because the reserved space changed. */
+  topPctRaw: number;
+  rotate: number;
+  throwX: number;
+}
+
 /** Divides the board into a jittered grid so dice land scattered but without heavy
- *  overlap. `reserveTopPct`/`reserveBottomPct` compress the grid into the remaining
- *  vertical space between them, leaving room clear at the top and/or bottom for any
- *  overlaid banner/controls. */
-function layoutDice(count: number, reserveTopPct: number, reserveBottomPct: number): DieLayout[] {
+ *  overlap. Computed once per roll (see `layout` in `GameBoard`, keyed only on
+ *  `rollId`/`dice.length`) - the raw `topPctRaw` is independent of how much space is
+ *  currently reserved for overlays, so later reserve changes (e.g. the controls bar's
+ *  measured height settling) never require re-randomizing positions (which would make
+ *  already-settled dice visibly jump). */
+function layoutDice(count: number): RawDieLayout[] {
   if (count === 0) return [];
   const cols = Math.ceil(Math.sqrt(count));
   const rows = Math.ceil(count / cols);
   const cellW = 100 / cols;
   const cellH = 100 / rows;
-  const usableHeightPct = 100 - reserveTopPct - reserveBottomPct;
 
   const cells = Array.from({ length: cols * rows }, (_, i) => i);
   for (let i = cells.length - 1; i > 0; i--) {
@@ -120,11 +133,25 @@ function layoutDice(count: number, reserveTopPct: number, reserveBottomPct: numb
     const jitterY = (Math.random() - 0.5) * cellH * 0.5;
     return {
       leftPct: col * cellW + cellW / 2 + jitterX,
-      topPct: reserveTopPct + (row * cellH + cellH / 2 + jitterY) * (usableHeightPct / 100),
+      topPctRaw: row * cellH + cellH / 2 + jitterY,
       rotate: Math.random() * 70 - 35,
       throwX: (Math.random() - 0.5) * 160,
     };
   });
+}
+
+/** Compresses a raw layout's vertical positions into the space left over after
+ *  reserving `reserveTopPct`/`reserveBottomPct` for overlays - a pure rescale, with no
+ *  randomization, so it can safely re-run whenever the reserved space changes without
+ *  shuffling any die into a different cell. */
+function applyReserve(raw: RawDieLayout[], reserveTopPct: number, reserveBottomPct: number): DieLayout[] {
+  const usableHeightPct = 100 - reserveTopPct - reserveBottomPct;
+  return raw.map((pos) => ({
+    leftPct: pos.leftPct,
+    topPct: reserveTopPct + pos.topPctRaw * (usableHeightPct / 100),
+    rotate: pos.rotate,
+    throwX: pos.throwX,
+  }));
 }
 
 /**
@@ -161,12 +188,23 @@ export function GameBoard({
     TOP_OVERLAY_RESERVED_PCT_FALLBACK,
   );
 
-  // Scattered resting positions/rotations per die, computed once per roll (keyed by
-  // rollId) so re-renders (e.g. toggling a hold) don't recompute/replay the throw.
-  const layout = useMemo(
-    () => layoutDice(dice.length, reserveTopPct, reserveBottomPct),
+  // The randomized cell/jitter/rotation assignment, computed once per roll (keyed by
+  // rollId) so re-renders - including the reserved-space recalculation below settling
+  // to its measured value, or a hold toggling - never reshuffle already-settled dice
+  // into different positions.
+  const rawLayout = useMemo(
+    () => layoutDice(dice.length),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rollId, dice.length, reserveTopPct, reserveBottomPct],
+    [rollId, dice.length],
+  );
+
+  // Rescaled into the space left over after reserving room for the top/bottom
+  // overlays - a cheap, non-randomized transform, so it can safely re-run whenever
+  // `reserveTopPct`/`reserveBottomPct` change (e.g. once an overlay's real height is
+  // measured) without disturbing any die's assigned cell.
+  const layout = useMemo(
+    () => applyReserve(rawLayout, reserveTopPct, reserveBottomPct),
+    [rawLayout, reserveTopPct, reserveBottomPct],
   );
 
   const liveDice = dice
