@@ -597,9 +597,8 @@ body {
 }
 
 .turn-log {
-  margin-top: 1rem;
-  border-top: 1px solid var(--panel-border);
-  padding-top: 0.75rem;
+  /* `.panel--turnlog` already supplies the surrounding border/background/padding now that
+   * this log lives in its own sidebar card instead of being appended under other content. */
 }
 
 .turn-log h4 {

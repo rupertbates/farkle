@@ -185,14 +185,12 @@ export default function App() {
             {!isHumanTurn && !isGameOver && turn.phase !== 'farkled' && turn.phase !== 'turn-banked' && (
               <p className="computer-status">{computerStatus}</p>
             )}
-
-            <TurnLog log={turn.log} />
           </section>
 
           <aside className="app__sidebar">
             <section className="panel panel--advisor">
               <CollapsiblePanel
-                title={isHumanTurn ? '🧭 Advisor' : "🧭 Computer's reasoning"}
+                title={isHumanTurn ? '🧭 Advisor' : "🤖 Computer's analysis"}
                 storageKey="farkle:panel:advisor-open"
                 defaultOpen={true}
               >
@@ -210,6 +208,12 @@ export default function App() {
                 )}
               </CollapsiblePanel>
             </section>
+
+            {turn.log.length > 0 && (
+              <section className="panel panel--turnlog">
+                <TurnLog log={turn.log} />
+              </section>
+            )}
 
             <section className="panel panel--scoring">
               <CollapsiblePanel title="📖 Scoring guide" storageKey="farkle:panel:scoring-open" defaultOpen={false}>
