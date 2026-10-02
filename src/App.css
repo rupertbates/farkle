@@ -296,8 +296,13 @@ body {
     font-size: 0.65rem;
   }
 
+  /* This shorthand's top value (0) deliberately overrides the desktop
+   * `.panel--table { padding-top: 0.1rem }` rule above - on mobile we want even less
+   * top padding than desktop, not more (a previous `0.5rem` here was actually *larger*
+   * than the desktop value, since shorthand later in the file always wins regardless
+   * of media query nesting). */
   .panel--table {
-    padding: 0.5rem 1.25rem 0.85rem;
+    padding: 0 1.25rem 0.85rem;
   }
 
   .panel--table h2 {
