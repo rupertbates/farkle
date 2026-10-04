@@ -244,8 +244,16 @@ export default function App() {
     setFrozenOverlayContent(overlayContent);
   }
 
+  // Covers every phase where dice from this turn are still (or again) sitting on the
+  // felt without a live overlay of their own - not just the farkled/turn-banked review,
+  // but also the brief `awaiting-roll` gap between committing a selection and the
+  // computer's next roll actually landing (e.g. mid-turn "continue" decisions, or the
+  // pause before a hot-dice reroll) - any dice still visible then would otherwise jump
+  // the instant the reserved space collapses. Once a turn actually ends and the next
+  // one starts fresh, `turn.dice` is cleared back to empty, so this naturally stops
+  // applying until the new turn's own live overlay content takes over.
   const shownOverlayContent =
-    overlayContent ?? (turn.phase === 'farkled' || turn.phase === 'turn-banked' ? frozenOverlayContent : null);
+    overlayContent ?? (turn.dice.length > 0 && turn.phase !== 'awaiting-selection' ? frozenOverlayContent : null);
 
   let topOverlay: ReactNode = null;
   if (shownOverlayContent) {
