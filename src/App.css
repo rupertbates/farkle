@@ -871,9 +871,12 @@ body {
   margin: 0;
 }
 
-.hot-dice-banner {
-  background: rgba(250, 204, 21, 0.18);
-  border: 1px solid var(--gold);
+/* The persistent one-line advisor headline shown atop the board every roll (see
+ * `topOverlay` in App.tsx). Neutral styling normally; `--hot` adds the gold hot-dice
+ * treatment when the current best option scores with all six dice. */
+.board__headline {
+  background: rgba(15, 23, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 0.5rem;
   padding: 0.35rem 0.75rem;
   margin: 0;
@@ -883,7 +886,12 @@ body {
   max-width: 100%;
 }
 
-.hot-dice-banner p {
+.board__headline--hot {
+  background: rgba(250, 204, 21, 0.18);
+  border-color: var(--gold);
+}
+
+.board__headline p {
   margin: 0;
 }
 

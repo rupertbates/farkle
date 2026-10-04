@@ -207,16 +207,20 @@ export default function App() {
     );
   }
 
-  // The hot-dice banner now lives as a small overlay pinned to the top of the board
-  // felt (mirroring the Roll/Bank controls pinned to the bottom), and is tied to
-  // `hotDiceReroll` rather than `isHotDice` - so it appears once the fresh 6 dice it
-  // earned have actually landed on the board, not earlier while the prior roll's
-  // dice are still animating into the held rail.
+  // A persistent one-line advisor headline pinned to the top of the board felt
+  // (mirroring the Roll/Bank controls pinned to the bottom), present every roll -
+  // not just on hot dice - showing the best option's recommendation. It reads
+  // straight off the live advisor report for whoever is currently deciding, so a
+  // hot-dice-qualifying roll is flagged the instant those dice are thrown (not
+  // only after the player locks it in and the fresh set is re-rolled - that re-roll
+  // is itself just another roll, and only shows the hot-dice phrasing again if its
+  // own best option happens to be hot dice too).
   let topOverlay: ReactNode = null;
-  if (turn.phase === 'awaiting-selection' && turn.hotDiceReroll) {
+  if (turn.phase === 'awaiting-selection' && advisorReport) {
+    const { best } = advisorReport;
     topOverlay = (
-      <div className="hot-dice-banner">
-        <p>🔥 Hot dice! All 6 dice scored - fresh set, your turn score is safe.</p>
+      <div className={`board__headline${best.isHotDice ? ' board__headline--hot' : ''}`}>
+        <p>{best.isHotDice ? `🔥 Hot dice! ${best.candidate.label}` : best.candidate.label}</p>
       </div>
     );
   }
