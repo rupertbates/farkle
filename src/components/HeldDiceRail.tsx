@@ -13,22 +13,37 @@ export interface HeldDiceRailProps {
   rollId: number;
   interactive: boolean;
   onToggle: (index: number) => void;
+  /** The running turn-score total, including any dice held but not yet locked in by
+   *  rolling/banking. Shown pinned at the top of this rail (above the held-dice
+   *  list) rather than in the panel header next to "Your turn"/"Computer's turn" -
+   *  it reads more naturally right above the dice it's the running total of. */
+  turnScore: number;
 }
 
 /**
  * Sits at the side of the board. Dice the player holds slide here from the board
  * (sharing a layoutId for the animated move) and stay visible for the rest of the
- * turn, grouped by which roll they were locked in on. The running turn-score total
- * lives in the panel header above (next to "Your turn"/"Computer's turn") rather
- * than here - previously it was a footer pinned at the bottom of this rail, but
- * moving it up top keeps it visible without needing to scroll the held-dice list.
+ * turn, grouped by which roll they were locked in on. A "Total" readout pinned at
+ * the top of the rail shows the running turn-score total just above them.
  */
-export function HeldDiceRail({ dice, selectedIndices, heldGroups, rollId, interactive, onToggle }: HeldDiceRailProps) {
+export function HeldDiceRail({
+  dice,
+  selectedIndices,
+  heldGroups,
+  rollId,
+  interactive,
+  onToggle,
+  turnScore,
+}: HeldDiceRailProps) {
   const hasAny = selectedIndices.length > 0 || heldGroups.length > 0;
   const pendingResult = scoreGroup(selectedIndices.map((index) => dice[index]));
 
   return (
     <div className="held-rail">
+      <div className="held-rail__total">
+        <span>Total</span>
+        <span className="held-rail__total-value">{turnScore.toLocaleString()} pts</span>
+      </div>
       <div className="held-rail__scroll">
         <h4>Held this turn</h4>
         {!hasAny && <p className="held-rail__empty">Dice you hold will appear here.</p>}

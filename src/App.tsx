@@ -285,13 +285,7 @@ export default function App() {
       {!isGameOver && (
         <main className="app__main">
           <section className="panel panel--table">
-            <div className="panel-table__header">
-              <h2>{isHumanTurn ? 'Your turn' : "Computer's turn"}</h2>
-              <div className="panel-table__turn-score">
-                <span>Turn score</span>
-                <span className="panel-table__turn-score-value">{displayedTurnScore.toLocaleString()} pts</span>
-              </div>
-            </div>
+            <h2 className="panel-table__heading">{isHumanTurn ? 'Your turn' : "Computer's turn"}</h2>
 
             <div className="board-row">
               <GameBoard
@@ -313,6 +307,7 @@ export default function App() {
                 rollId={turn.rollId}
                 interactive={isHumanTurn && turn.phase === 'awaiting-selection'}
                 onToggle={actions.toggleDie}
+                turnScore={displayedTurnScore}
               />
             </div>
 
