@@ -223,10 +223,6 @@ export function GameBoard({
           <p className="board__placeholder">🎲 Roll to throw the dice onto the board</p>
         )}
 
-        {interactive && dice.length > 0 && liveDice.length === 0 && (
-          <p className="board__placeholder">All dice held - lock them in or bank your turn</p>
-        )}
-
         {liveDice.map(({ value, index }) => {
           const pos = layout[index] ?? { leftPct: 50, topPct: 50, rotate: 0, throwX: 0 };
           return (
