@@ -220,7 +220,7 @@ export default function App() {
   // only after the player locks it in and the fresh set is re-rolled - that re-roll
   // is itself just another roll, and only shows the hot-dice phrasing again if its
   // own best option happens to be hot dice too).
-  let topOverlay: ReactNode = null;
+  let overlayContent: { headline: string; isHotDice: boolean } | null = null;
   if (turn.phase === 'awaiting-selection' && advisorReport) {
     const { best } = advisorReport;
     // Skip the "then bank/keep rolling" suffix for a "keep some, reroll the rest"
@@ -228,10 +228,31 @@ export default function App() {
     // action again would just repeat it (same condition the sidebar advisor uses).
     const showActionSuffix = !(best.recommendedAction === 'continue' && best.candidate.label.includes('reroll the rest'));
     const actionSuffix = showActionSuffix ? ` - then ${best.recommendedAction === 'bank' ? 'bank' : 'keep rolling'}` : '';
-    const headline = `${best.candidate.label}${actionSuffix}`;
+    overlayContent = { headline: `${best.candidate.label}${actionSuffix}`, isHotDice: best.isHotDice };
+  }
+
+  // Keeps the headline's last content (and, critically, the board space reserved for
+  // it - see `useOverlayReservePct`) in place through the farkled/turn-banked review
+  // pause, rather than collapsing to nothing the instant the turn ends. Otherwise the
+  // reserved top space shrinks to zero as soon as `overlayContent` goes null, and the
+  // dice still visible beneath the end-of-turn popover visibly jump upward to fill it.
+  // Same derived-during-render approach as `frozenComputerView` above.
+  const [frozenOverlayContent, setFrozenOverlayContent] = useState<{ headline: string; isHotDice: boolean } | null>(
+    null,
+  );
+  if (overlayContent && overlayContent.headline !== frozenOverlayContent?.headline) {
+    setFrozenOverlayContent(overlayContent);
+  }
+
+  const shownOverlayContent =
+    overlayContent ?? (turn.phase === 'farkled' || turn.phase === 'turn-banked' ? frozenOverlayContent : null);
+
+  let topOverlay: ReactNode = null;
+  if (shownOverlayContent) {
+    const { headline, isHotDice } = shownOverlayContent;
     topOverlay = (
-      <div className={`board__headline${best.isHotDice ? ' board__headline--hot' : ''}`}>
-        <p>{best.isHotDice ? `🔥 Hot dice! ${headline}` : headline}</p>
+      <div className={`board__headline${isHotDice ? ' board__headline--hot' : ''}`}>
+        <p>{isHotDice ? `🔥 Hot dice! ${headline}` : headline}</p>
       </div>
     );
   }
