@@ -221,16 +221,31 @@ body {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
+  flex-wrap: nowrap;
 }
 
+/* flex-shrink:1 (the default) would let the heading's text wrap onto a second line
+ * once the row gets tight, growing the header's height and pushing the board down
+ * with it. min-width: 0 lets it actually shrink below its content width (flex items
+ * default to min-width: auto, i.e. never shrinking past their content) so it can
+ * truncate instead - the heading is decorative context ("Your turn") rather than
+ * information that needs to stay fully readable at any width. */
 .panel-table__header h2 {
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* flex-shrink: 0 keeps the turn-score block at its natural width no matter how tight
+ * the header gets - it's short and far more important to read at a glance than the
+ * heading text next to it, so the heading should give way first. */
 .panel-table__turn-score {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  flex-shrink: 0;
   gap: 0.1rem;
   font-size: 0.75rem;
   color: var(--text-dim);
