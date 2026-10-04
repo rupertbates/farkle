@@ -260,7 +260,7 @@ body {
 
 .panel-table__turn-score-value {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--gold);
 }
 
@@ -348,13 +348,12 @@ body {
     font-size: 0.65rem;
   }
 
-  /* This shorthand's top value (0) deliberately overrides the desktop
-   * `.panel--table { padding-top: 0.1rem }` rule above - on mobile we want even less
-   * top padding than desktop, not more (a previous `0.5rem` here was actually *larger*
-   * than the desktop value, since shorthand later in the file always wins regardless
-   * of media query nesting). */
+  /* Mirrors the panel's existing bottom padding instead of leaving the heading flush
+   * against the top edge (a literal 0 here previously) - the lack of any breathing
+   * room above "Your turn" while the panel still had generous padding below made the
+   * whole header look lopsided. */
   .panel--table {
-    padding: 0 1.25rem 0.85rem;
+    padding: 0.6rem 1.25rem 0.85rem;
   }
 
   .panel--table h2 {
@@ -367,14 +366,16 @@ body {
 
   /* Shrink the turn-score text a bit on mobile, on top of the heading's own
    * ellipsis-truncate fallback, to leave the two more room to coexist on one line
-   * without the heading needing to truncate in the first place. */
+   * without the heading needing to truncate in the first place. Keeping the label and
+   * value closer in size (rather than the label shrinking much more than the value
+   * grows) stops the value reading as oversized next to it. */
   .panel-table__turn-score {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     gap: 0.3rem;
   }
 
   .panel-table__turn-score-value {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
   }
 
   /* The outer page padding, header, and the gaps around the board itself all add up
