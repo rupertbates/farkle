@@ -218,9 +218,15 @@ export default function App() {
   let topOverlay: ReactNode = null;
   if (turn.phase === 'awaiting-selection' && advisorReport) {
     const { best } = advisorReport;
+    // Skip the "then bank/keep rolling" suffix for a "keep some, reroll the rest"
+    // candidate - its label already states that it's continuing, so appending the
+    // action again would just repeat it (same condition the sidebar advisor uses).
+    const showActionSuffix = !(best.recommendedAction === 'continue' && best.candidate.label.includes('reroll the rest'));
+    const actionSuffix = showActionSuffix ? ` - then ${best.recommendedAction === 'bank' ? 'bank' : 'keep rolling'}` : '';
+    const headline = `${best.candidate.label}${actionSuffix}`;
     topOverlay = (
       <div className={`board__headline${best.isHotDice ? ' board__headline--hot' : ''}`}>
-        <p>{best.isHotDice ? `🔥 Hot dice! ${best.candidate.label}` : best.candidate.label}</p>
+        <p>{best.isHotDice ? `🔥 Hot dice! ${headline}` : headline}</p>
       </div>
     );
   }
