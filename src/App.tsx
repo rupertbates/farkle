@@ -207,6 +207,11 @@ export default function App() {
     );
   }
 
+  // Dice the player has moved to the held rail but not yet locked in by rolling/banking
+  // still count towards the turn score as soon as they're held, rather than only once
+  // the next roll (or bank) formally commits them.
+  const displayedTurnScore = turn.turnScore + (selectionValidity.valid ? selectionValidity.score : 0);
+
   // A persistent one-line advisor headline pinned to the top of the board felt
   // (mirroring the Roll/Bank controls pinned to the bottom), present every roll -
   // not just on hot dice - showing the best option's recommendation. It reads
@@ -259,7 +264,13 @@ export default function App() {
       {!isGameOver && (
         <main className="app__main">
           <section className="panel panel--table">
-            <h2>{isHumanTurn ? 'Your turn' : "Computer's turn"}</h2>
+            <div className="panel-table__header">
+              <h2>{isHumanTurn ? 'Your turn' : "Computer's turn"}</h2>
+              <div className="panel-table__turn-score">
+                <span>Turn score</span>
+                <span className="panel-table__turn-score-value">{displayedTurnScore.toLocaleString()} pts</span>
+              </div>
+            </div>
 
             <div className="board-row">
               <GameBoard
@@ -281,7 +292,6 @@ export default function App() {
                 rollId={turn.rollId}
                 interactive={isHumanTurn && turn.phase === 'awaiting-selection'}
                 onToggle={actions.toggleDie}
-                turnScore={turn.turnScore}
               />
             </div>
 

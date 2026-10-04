@@ -212,6 +212,41 @@ body {
   padding-top: 0.1rem;
 }
 
+/* Houses the "Your turn"/"Computer's turn" heading and the running turn-score total
+ * side by side - previously the turn score lived as a footer at the bottom of the
+ * held-dice rail, but that put it out of sight unless you looked at the side tray.
+ * Putting it up top, across from the turn heading, keeps it visible at a glance. */
+.panel-table__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.panel-table__header h2 {
+  margin: 0;
+}
+
+.panel-table__turn-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.panel-table__turn-score-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 /* Shared collapse/expand chrome for the scoring guide and advisor panels - both are
  * useful but not something every player wants taking up space on every single roll, so
  * they share one clickable header that toggles visibility and remembers the choice. */
@@ -586,33 +621,6 @@ body {
   font-size: 0.75rem;
   color: #fbbf24;
   font-style: italic;
-}
-
-/* Pinned footer showing the running turn score. Consolidates what used to be a
- * "Turn score" line in the scoreboard header - previously it only appeared under
- * whichever player's column was active, which changed that column's height turn to
- * turn and made the whole page jump. Living here, it's always present in the same
- * place regardless of whose turn it is. */
-.held-rail__turn-score {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  margin-top: auto;
-  padding-top: 0.6rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.held-rail__turn-score-value {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--gold);
-  text-transform: none;
-  letter-spacing: normal;
 }
 
 .scoring-chart {

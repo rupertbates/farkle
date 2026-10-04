@@ -13,33 +13,19 @@ export interface HeldDiceRailProps {
   rollId: number;
   interactive: boolean;
   onToggle: (index: number) => void;
-  /** Running total banked-so-far this turn (not yet on the scoreboard until the turn ends). */
-  turnScore: number;
 }
 
 /**
  * Sits at the side of the board. Dice the player holds slide here from the board
  * (sharing a layoutId for the animated move) and stay visible for the rest of the
- * turn, grouped by which roll they were locked in on. A running turn-score footer is
- * pinned at the bottom - previously this lived in the scoreboard header above, but
- * its position flipped between the human's and computer's columns depending on
- * whose turn it was, making the whole page jump height between turns.
+ * turn, grouped by which roll they were locked in on. The running turn-score total
+ * lives in the panel header above (next to "Your turn"/"Computer's turn") rather
+ * than here - previously it was a footer pinned at the bottom of this rail, but
+ * moving it up top keeps it visible without needing to scroll the held-dice list.
  */
-export function HeldDiceRail({
-  dice,
-  selectedIndices,
-  heldGroups,
-  rollId,
-  interactive,
-  onToggle,
-  turnScore,
-}: HeldDiceRailProps) {
+export function HeldDiceRail({ dice, selectedIndices, heldGroups, rollId, interactive, onToggle }: HeldDiceRailProps) {
   const hasAny = selectedIndices.length > 0 || heldGroups.length > 0;
   const pendingResult = scoreGroup(selectedIndices.map((index) => dice[index]));
-  // Dice the player has moved to this tray but not yet locked in by rolling/banking
-  // still count towards the turn score as soon as they're held, rather than only
-  // once the next roll (or bank) formally commits them.
-  const displayedTurnScore = turnScore + (pendingResult.valid ? pendingResult.score : 0);
 
   return (
     <div className="held-rail">
@@ -79,11 +65,6 @@ export function HeldDiceRail({
             </span>
           </div>
         )}
-      </div>
-
-      <div className="held-rail__turn-score">
-        <span>Turn score</span>
-        <span className="held-rail__turn-score-value">{displayedTurnScore.toLocaleString()} pts</span>
       </div>
     </div>
   );
