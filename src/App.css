@@ -207,9 +207,14 @@ body {
 
 /* The board's panel had noticeably more empty space above its "Your/Computer's turn"
  * heading than other panels feel like they need - shrink just the top padding here
- * rather than the shared .panel padding (which the sidebar panels still rely on). */
+ * rather than the shared .panel padding (which the sidebar panels still rely on).
+ * The left/right padding is set explicitly (rather than inheriting .panel's 1.25rem)
+ * to match the scoreboard's own horizontal padding above, so the board's edges line
+ * up with the "You"/"Computer" boxes' edges instead of sitting further in. */
 .panel--table {
   padding-top: 0.1rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
 
 /* Houses the "Your turn"/"Computer's turn" heading and the running turn-score total
@@ -351,9 +356,12 @@ body {
   /* Mirrors the panel's existing bottom padding instead of leaving the heading flush
    * against the top edge (a literal 0 here previously) - the lack of any breathing
    * room above "Your turn" while the panel still had generous padding below made the
-   * whole header look lopsided. */
+   * whole header look lopsided. Left/right matches the scoreboard's own mobile
+   * padding (0.75rem) for the same reason as the desktop rule above - so the board's
+   * edges line up with the "You"/"Computer" boxes' edges rather than sitting further
+   * in than them. */
   .panel--table {
-    padding: 0.6rem 1.25rem 0.85rem;
+    padding: 0.6rem 0.75rem 0.85rem;
   }
 
   .panel--table h2 {
