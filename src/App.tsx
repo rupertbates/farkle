@@ -15,6 +15,7 @@ import { SettingsOverlay } from './components/SettingsOverlay';
 import './App.css';
 
 const PAUSE_AFTER_COMPUTER_TURN_KEY = 'farkle:setting:pause-after-computer-turn';
+const SHOW_ADVICE_KEY = 'farkle:setting:show-advice';
 
 function readStoredBoolean(key: string, defaultValue: boolean): boolean {
   try {
@@ -31,6 +32,7 @@ export default function App() {
   const [pauseAfterComputerTurn, setPauseAfterComputerTurn] = useState(() =>
     readStoredBoolean(PAUSE_AFTER_COMPUTER_TURN_KEY, true),
   );
+  const [showAdvice, setShowAdvice] = useState(() => readStoredBoolean(SHOW_ADVICE_KEY, true));
   // Tracks whether any dice have ever been rolled in this game (across every turn), so
   // the board's "Roll to throw the dice" placeholder can be shown only once, at the
   // very start of a new game, rather than reappearing at the start of every turn.
@@ -43,6 +45,18 @@ export default function App() {
       const next = !prev;
       try {
         window.localStorage.setItem(PAUSE_AFTER_COMPUTER_TURN_KEY, String(next));
+      } catch {
+        // Ignore storage failures - the toggle still works for the rest of this session.
+      }
+      return next;
+    });
+  };
+
+  const toggleShowAdvice = () => {
+    setShowAdvice((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(SHOW_ADVICE_KEY, String(next));
       } catch {
         // Ignore storage failures - the toggle still works for the rest of this session.
       }
@@ -226,7 +240,7 @@ export default function App() {
   // the computer's advisor reasoning surfaced as if it were their own recommendation,
   // and this replaces the separate status paragraph that used to sit under the board.
   let overlayContent: { icon: string; text: string; isHotDice: boolean; reasoning: string } | null = null;
-  if (isHumanTurn && turn.phase === 'awaiting-selection' && advisorReport) {
+  if (showAdvice && isHumanTurn && turn.phase === 'awaiting-selection' && advisorReport) {
     const { best } = advisorReport;
     // Skip the "then bank/keep rolling" suffix for a "keep some, reroll the rest"
     // candidate - its label already states that it's continuing, so appending the
@@ -343,6 +357,8 @@ export default function App() {
         <SettingsOverlay
           pauseAfterComputerTurn={pauseAfterComputerTurn}
           onTogglePauseAfterComputerTurn={togglePauseAfterComputerTurn}
+          showAdvice={showAdvice}
+          onToggleShowAdvice={toggleShowAdvice}
           onClose={() => setShowSettings(false)}
         />
       )}

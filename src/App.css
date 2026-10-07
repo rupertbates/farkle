@@ -1342,6 +1342,10 @@ body {
   font-size: 0.9rem;
 }
 
+.settings__toggle + .settings__toggle {
+  margin-top: 1rem;
+}
+
 .settings__toggle input {
   margin-top: 0.2rem;
   accent-color: var(--accent);
