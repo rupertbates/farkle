@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { DEFAULT_TARGET_SCORE } from './game';
+import { DEFAULT_TARGET_SCORE, shouldShowRecommendedActionSuffix } from './game';
 import type { AdvisorReport, ComputerDecision, ComputerSkill } from './game';
 import { useFarkleGame } from './hooks/useFarkleGame';
 import { booleanCodec, enumCodec, usePersistedState } from './hooks/usePersistedState';
@@ -225,8 +225,9 @@ export default function App() {
     // Skip the "then bank/keep rolling" suffix for a "keep some, reroll the rest"
     // candidate - its label already states that it's continuing, so appending the
     // action again would just repeat it (same condition the sidebar advisor uses).
-    const showActionSuffix = !(best.recommendedAction === 'continue' && best.candidate.label.includes('reroll the rest'));
-    const actionSuffix = showActionSuffix ? ` - then ${best.recommendedAction === 'bank' ? 'bank' : 'keep rolling'}` : '';
+    const actionSuffix = shouldShowRecommendedActionSuffix(best)
+      ? ` - then ${best.recommendedAction === 'bank' ? 'bank' : 'keep rolling'}`
+      : '';
     const reasoning = best.recommendedAction === 'bank' ? best.bank.explanation : best.continue.explanation;
     const actionIcon = best.recommendedAction === 'bank' ? '🏦' : '🎲';
     const text = best.isHotDice ? `Hot dice! ${best.candidate.label}${actionSuffix}` : `${best.candidate.label}${actionSuffix}`;

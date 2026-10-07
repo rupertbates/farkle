@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAdvisorReport } from '../advisor';
+import { getAdvisorReport, shouldShowRecommendedActionSuffix } from '../advisor';
 import type { DieValue } from '../types';
 
 describe('getAdvisorReport', () => {
@@ -52,6 +52,36 @@ describe('getAdvisorReport', () => {
     expect(report.best.diceRemainingIfContinuing).toBe(1);
     expect(report.best.recommendedAction).toBe('bank');
     expect(report.best.isHotDice).toBe(false);
+  });
+
+  describe('shouldShowRecommendedActionSuffix', () => {
+    it('is false for a "keep some, reroll the rest" continue candidate (label already says it continues)', () => {
+      // Two lone 5s: one candidate is "keep one of 2, reroll the rest" (continue).
+      const dice: DieValue[] = [5, 5, 2, 3, 4, 6];
+      const report = getAdvisorReport({
+        dice,
+        turnScoreBeforeRoll: 0,
+        playerTotalScore: 0,
+        targetScore: 10000,
+      });
+      const kept = report.options.find(
+        (o) => o.recommendedAction === 'continue' && o.candidate.label.includes('reroll the rest'),
+      );
+      expect(kept).toBeDefined();
+      expect(shouldShowRecommendedActionSuffix(kept!)).toBe(false);
+    });
+
+    it('is true for a bank recommendation', () => {
+      const dice: DieValue[] = [1, 1, 1, 1, 1, 2];
+      const report = getAdvisorReport({
+        dice,
+        turnScoreBeforeRoll: 0,
+        playerTotalScore: 0,
+        targetScore: 10000,
+      });
+      expect(report.best.recommendedAction).toBe('bank');
+      expect(shouldShowRecommendedActionSuffix(report.best)).toBe(true);
+    });
   });
 
   describe('riskAwareness', () => {

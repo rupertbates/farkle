@@ -137,6 +137,16 @@ function applyRiskAwareness(params: {
  * Optionally (via `riskAwareness`), the bank-vs-continue decision boundary is nudged
  * based on the race to `targetScore` - see `applyRiskAwareness` for the heuristic.
  */
+/**
+ * True if the recommended action (bank/keep rolling) should be spelled out
+ * separately after the candidate's own label. A "keep some, reroll the rest"
+ * candidate already states that it's continuing as part of its label, so appending
+ * the action again would just repeat it - only suppressed in that one case.
+ */
+export function shouldShowRecommendedActionSuffix(best: AdvisorRecommendation): boolean {
+  return !(best.recommendedAction === 'continue' && best.candidate.label.includes('reroll the rest'));
+}
+
 export function getAdvisorReport(input: AdvisorInput): AdvisorReport {
   const { dice, turnScoreBeforeRoll, playerTotalScore, targetScore, opponentTotalScore, riskAwareness } = input;
   const lookaheadDepth = input.lookaheadDepth ?? DEFAULT_LOOKAHEAD_DEPTH;
