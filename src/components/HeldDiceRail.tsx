@@ -18,6 +18,11 @@ export interface HeldDiceRailProps {
    *  list) rather than in the panel header next to "Your turn"/"Computer's turn" -
    *  it reads more naturally right above the dice it's the running total of. */
   turnScore: number;
+  /** Why the currently-held (pending) selection can't be rolled/banked yet, or
+   *  `undefined` when it's valid (or nothing's held). Shown as a tooltip on the
+   *  pending group's "Not scoring" badge - deliberately not as its own paragraph,
+   *  so an invalid selection never reserves/varies vertical space on the board. */
+  invalidReason?: string;
 }
 
 /**
@@ -34,6 +39,7 @@ export function HeldDiceRail({
   interactive,
   onToggle,
   turnScore,
+  invalidReason,
 }: HeldDiceRailProps) {
   const hasAny = selectedIndices.length > 0 || heldGroups.length > 0;
   const pendingResult = scoreGroup(selectedIndices.map((index) => dice[index]));
@@ -63,7 +69,7 @@ export function HeldDiceRail({
         })}
 
         {selectedIndices.length > 0 && (
-          <div className="held-rail__group held-rail__group--pending">
+          <div className={`held-rail__group held-rail__group--pending${pendingResult.valid ? '' : ' held-rail__group--invalid'}`}>
             <div className="held-rail__dice">
               {selectedIndices.map((index) => (
                 <motion.div
@@ -75,9 +81,13 @@ export function HeldDiceRail({
                 </motion.div>
               ))}
             </div>
-            <span className="held-rail__points-pending">
-              {pendingResult.valid ? `+${pendingResult.score} pts` : 'not scoring'}
-            </span>
+            {pendingResult.valid ? (
+              <span className="held-rail__points-pending">+{pendingResult.score} pts</span>
+            ) : (
+              <span className="held-rail__points-pending held-rail__points-pending--invalid" title={invalidReason}>
+                ⚠️ No score
+              </span>
+            )}
           </div>
         )}
       </div>

@@ -662,6 +662,36 @@ body {
   border-left: 3px solid #fbbf24;
 }
 
+/* Replaces the old reserved-space "That combination of dice..." paragraph on the
+ * board - invalid feedback now lives directly on the dice that are the problem,
+ * with a tooltip (see `invalidReason`) for the full explanation, instead of a
+ * separate line of text that pushed the board's layout around when it appeared or
+ * wrapped. */
+.held-rail__group--invalid {
+  border-left-color: var(--danger);
+  background: rgba(239, 68, 68, 0.12);
+  animation: held-rail-shake 0.4s ease;
+}
+
+@keyframes held-rail-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
 .held-rail__dice {
   display: flex;
   flex-wrap: wrap;
@@ -678,6 +708,11 @@ body {
   font-size: 0.75rem;
   color: #fbbf24;
   font-style: italic;
+}
+
+.held-rail__points-pending--invalid {
+  color: var(--danger);
+  cursor: help;
 }
 
 .scoring-chart {
@@ -907,12 +942,6 @@ body {
 
 .btn--bank:hover:not(:disabled) {
   background: var(--bank-dark);
-}
-
-.selection-status {
-  color: var(--text-dim);
-  font-size: 0.9rem;
-  margin: 0;
 }
 
 .farkle-banner {

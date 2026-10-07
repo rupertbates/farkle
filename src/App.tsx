@@ -142,21 +142,19 @@ export default function App() {
   } else if (isHumanTurn && turn.phase === 'awaiting-selection') {
     controlsOverlay = (
       <div className="controls">
-        {/* The valid case ("Held dice score N pts") is redundant now that the
-         * held rail's footer and the button labels below both already show the
-         * score, so only the invalid case has real text. The paragraph still
-         * always renders (just visually hidden) so its line of space stays
-         * reserved - otherwise the buttons below jump up/down as this message
-         * appears and disappears while toggling dice. */}
-        <p
-          className="selection-status"
-          aria-hidden={selectionValidity.valid}
-          style={selectionValidity.valid ? { visibility: 'hidden' } : undefined}
-        >
-          {selectionValidity.valid ? '\u00A0' : selectionValidity.reason}
-        </p>
         <div className="controls__row">
-          <button type="button" className="btn btn--primary" disabled={!selectionValidity.valid} onClick={actions.roll}>
+          {/* No more reserved-space status line above these buttons - it used to
+           * push the dice layout around whenever its text wrapped. Instead, an
+           * invalid selection is shown directly on the held dice themselves (see
+           * `HeldDiceRail`'s "Not scoring" badge) and surfaced here only as a
+           * native tooltip on the disabled Roll button - neither affects layout. */}
+          <button
+            type="button"
+            className="btn btn--primary"
+            disabled={!selectionValidity.valid}
+            onClick={actions.roll}
+            title={selectionValidity.valid ? undefined : selectionValidity.reason}
+          >
             <span className="btn__roll-full">{nextRollLabel}</span>
             <span className="btn__roll-short">{nextRollShortLabel}</span>
           </button>
@@ -389,6 +387,11 @@ export default function App() {
                 interactive={isHumanTurn && turn.phase === 'awaiting-selection'}
                 onToggle={actions.toggleDie}
                 turnScore={displayedTurnScore}
+                invalidReason={
+                  isHumanTurn && turn.phase === 'awaiting-selection' && !selectionValidity.valid
+                    ? selectionValidity.reason
+                    : undefined
+                }
               />
             </div>
           </section>
