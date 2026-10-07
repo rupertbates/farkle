@@ -6,6 +6,9 @@ import type { DieValue, SelectionCandidate } from './types';
 export interface ActionEvaluation {
   action: 'bank' | 'continue';
   expectedValue: number;
+  /** Plain-English reasoning for this action, as a small trusted HTML fragment (just
+   *  `<strong>`/`<br />`) for emphasis on key numbers - render with
+   *  `dangerouslySetInnerHTML`, never from untrusted input. */
   explanation: string;
 }
 
@@ -173,19 +176,19 @@ export function getAdvisorReport(input: AdvisorInput): AdvisorReport {
       action: 'bank',
       expectedValue: bankEV,
       explanation:
-        `Banking locks in ${turnScoreAfter.toLocaleString()} points this turn for certain, ` +
-        `which is higher than ~${Math.round(continueEV).toLocaleString()} points, the expected value of continuing ` +
-        `(Farkle risk ${(stats.farkleProbability * 100).toFixed(1)}%).`,
+        `Banking locks in <strong>${turnScoreAfter.toLocaleString()} points</strong> this turn for certain, ` +
+        `which is higher than ~<strong>${Math.round(continueEV).toLocaleString()} points</strong>, the expected value of continuing ` +
+        `(Farkle risk <strong>${(stats.farkleProbability * 100).toFixed(1)}%</strong>).`,
     };
     const continueEval: ActionEvaluation = {
       action: 'continue',
       expectedValue: continueEV,
       explanation:
         (isHotDice ? `🔥 Hot dice! You get a fresh set of six dice. Rolling them` : `Rolling ${numberWord(diceRemainingIfContinuing)} dice`) +
-        ` has a ${(stats.farkleProbability * 100).toFixed(1)}% ` +
-        `chance of Farkling on this very next roll (losing all ${turnScoreAfter.toLocaleString()} points this turn). ` +
+        ` has a <strong>${(stats.farkleProbability * 100).toFixed(1)}% chance</strong> of Farkling on the next roll ` +
+        `(losing all <strong>${turnScoreAfter.toLocaleString()} points</strong> this turn).<br /><br />` +
         `Factoring in the next few rolls played optimally - including the chance of chaining into further Hot Dice - ` +
-        `continuing is worth about ${Math.round(continueEV).toLocaleString()} points on average.`,
+        `continuing is worth about <strong>${Math.round(continueEV).toLocaleString()} points</strong> on average.`,
     };
 
     return {

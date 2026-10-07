@@ -298,7 +298,9 @@ export default function App() {
         </div>
         {reasoning && showHeadlineReasoning && (
           <div className="board__headline-reasoning-popover" role="tooltip">
-            <p>{reasoning}</p>
+            {/* `reasoning` is a trusted HTML fragment built by advisor.ts (just
+             * <strong>/<br /> for emphasis), never from user input. */}
+            <p dangerouslySetInnerHTML={{ __html: reasoning }} />
           </div>
         )}
       </div>

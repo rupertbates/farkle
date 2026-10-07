@@ -95,9 +95,14 @@ export function AdvisorPanel({ report, onApplySelection, mode = 'human', compute
         </div>
         <details className="advisor__reasoning">
           <summary>Show reasoning</summary>
-          <p className="advisor__explanation">
-            {best.recommendedAction === 'bank' ? best.bank.explanation : best.continue.explanation}
-          </p>
+          {/* The explanation is a trusted HTML fragment built by advisor.ts (just
+           * <strong>/<br /> for emphasis), never from user input. */}
+          <p
+            className="advisor__explanation"
+            dangerouslySetInnerHTML={{
+              __html: best.recommendedAction === 'bank' ? best.bank.explanation : best.continue.explanation,
+            }}
+          />
           {best.riskAdjustmentExplanation && (
             <p className="advisor__risk-note">⚖️ Adjusted for game state: {best.riskAdjustmentExplanation}.</p>
           )}
