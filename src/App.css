@@ -989,6 +989,16 @@ body {
   border-color: var(--gold);
 }
 
+/* Flattens the banner's own bottom corners while its reasoning popover is open, so
+ * the popover (which sits flush beneath it, see `.board__headline-reasoning-popover`)
+ * reads as one continuous connected panel instead of leaving rounded notches at the
+ * seam. */
+.board__headline--popover-open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
 .board__headline-row {
   display: flex;
   align-items: center;
@@ -1049,18 +1059,26 @@ body {
  * GameBoard), which would otherwise visibly re-settle the dice underneath just from
  * toggling this "why?" popover. It's fine for it to briefly overlay a die or two
  * while open - that's the same tradeoff any floating tooltip/popover makes, and it's
- * only ever open because the player explicitly asked for it. */
+ * only ever open because the player explicitly asked for it.
+ *
+ * `left: 0; right: 0` matches `.board__headline`'s own full width exactly (it's
+ * positioned relative to that banner's padding box), and it sits flush against the
+ * banner's bottom edge with matching rounded corners only on its own bottom so it
+ * reads as a direct continuation of the banner rather than a separate floating
+ * tooltip. No `max-height`/scrolling: since it's out of flow, letting it grow as
+ * tall as its text needs never affects the reserved space or pushes the dice. */
 .board__headline-reasoning-popover {
   position: absolute;
-  top: calc(100% + 0.4rem);
-  left: 0.5rem;
-  right: 0.5rem;
+  top: 100%;
+  left: 0;
+  right: 0;
   z-index: 5;
-  padding: 0.65rem 0.8rem;
+  padding: 0.65rem 1rem 0.75rem;
   background: rgba(8, 20, 14, 0.94);
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 0.6rem;
+  border-top: none;
+  border-radius: 0 0 0.5rem 0.5rem;
   font-weight: 400;
   font-size: 0.78rem;
   line-height: 1.45;
@@ -1069,26 +1087,6 @@ body {
   /* Also opt back into pointer events (see `.board__top-overlay`) so its text remains
    * selectable rather than click-through to the dice behind it. */
   pointer-events: auto;
-  /* Keeps it from ever growing past a sane size on a short screen - scrolls instead. */
-  max-height: 9rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-/* A small triangular "caret" pointing back up at the info button it belongs to, so
- * the floating card reads as clearly anchored to it rather than a separate, oddly-
- * placed box. */
-.board__headline-reasoning-popover::before {
-  content: '';
-  position: absolute;
-  top: -0.3rem;
-  right: 0.85rem;
-  width: 0.6rem;
-  height: 0.6rem;
-  background: rgba(8, 20, 14, 0.94);
-  border-left: 1px solid rgba(255, 255, 255, 0.22);
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
-  transform: rotate(45deg);
 }
 
 .board__headline-reasoning-popover p {

@@ -271,8 +271,13 @@ export default function App() {
   let topOverlay: ReactNode = null;
   if (shownOverlayContent) {
     const { icon, text, isHotDice, reasoning } = shownOverlayContent;
+    const popoverOpen = Boolean(reasoning) && showHeadlineReasoning;
     topOverlay = (
-      <div className={`board__headline${isHotDice ? ' board__headline--hot' : ''}`}>
+      <div
+        className={`board__headline${isHotDice ? ' board__headline--hot' : ''}${
+          popoverOpen ? ' board__headline--popover-open' : ''
+        }`}
+      >
         <div className="board__headline-row">
           <span className="board__headline-icon" aria-hidden="true">
             {icon}
