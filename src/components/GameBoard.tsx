@@ -27,15 +27,16 @@ export interface GameBoardProps {
    *  `useOverlayReservePct`) so live dice never land underneath the buttons. */
   controlsOverlay?: ReactNode;
   /** A small status banner (e.g. "Hot dice!") pinned to the top of the felt. Dice are
-   *  scattered below the banner's actual (measured) height - including its "why?"
-   *  reasoning popover when expanded - so a die is never scattered underneath it or
-   *  left stranded under it after it grows (e.g. wrapped text, or opening the
-   *  reasoning popover). See `useOverlayReservePct`. */
+   *  scattered below the banner's actual (measured) height, so a die is never
+   *  scattered underneath it or left stranded under it after it grows (e.g. wrapped
+   *  text). Its "why?" reasoning popover, when expanded, floats over the felt instead
+   *  of affecting this measurement - see `.board__headline-reasoning-popover`. See
+   *  `useOverlayReservePct`. */
   topOverlay?: ReactNode;
   /** Whether `topOverlay`'s reserved space should track its real, live-measured
-   *  height (for the human's advisor banner, whose reasoning popover can open and
-   *  genuinely needs the room) or stay at one fixed, generously-sized reserve (for
-   *  the computer-turn status line, whose short phrase changes - and so wraps to a
+   *  height (for the human's advisor banner, which can still wrap to 2 lines on a
+   *  narrow screen) or stay at one fixed, generously-sized reserve (for the
+   *  computer-turn status line, whose short phrase changes - and so wraps to a
    *  different number of lines - every time the computer moves through a phase, with
    *  nothing for the player to actually read "under"). Fixed avoids dice visibly
    *  re-settling on every such change for content nobody's interacting with, while
@@ -73,11 +74,12 @@ const TOP_OVERLAY_STATIC_RESERVE_PCT = 26;
 
 /** Ceilings on how much of the felt's height an overlay may ever claim, so a single
  *  die or two is never asked to squeeze into literally zero space. The top banner
- *  gets a much higher ceiling than the bottom controls bar: its content (especially
- *  the reasoning popover, bounded but still sizeable - see `.board__headline-
- *  reasoning-popover`) can legitimately need most of a short, narrow felt, and unlike
- *  the bottom bar it's the one dice must never end up underneath (see `applyReserve`'s
- *  `topMarginPct`, enforced only against this boundary). */
+ *  gets a higher ceiling than the bottom controls bar since, unlike the bottom bar,
+ *  it's the one dice must never end up underneath (see `applyReserve`'s
+ *  `topMarginPct`, enforced only against this boundary) - even though in practice it
+ *  only ever needs to cover the banner's own (at most 2-line) text now that its
+ *  reasoning popover floats separately instead of affecting this measurement (see
+ *  `.board__headline-reasoning-popover`). */
 const CONTROLS_RESERVE_PCT_MAX = 70;
 const TOP_OVERLAY_RESERVE_PCT_MAX = 92;
 
@@ -269,12 +271,13 @@ export function GameBoard({
   );
   // Measured live (see `useOverlayReservePct`) rather than a fixed guess, so dice are
   // never left scattered underneath the banner whatever its actual height turns out to
-  // be - including the "why?" reasoning popover, which is part of normal document flow
-  // (not floated) specifically so opening it grows this measurement too. Already-
-  // settled dice smoothly re-settle into the newly-shrunk space instead of jumping
-  // (see the `top`/`left` transition on `.board__die-slot`). Falls back to a fixed
-  // reserve instead (ignoring the real measured height) when `topOverlayMeasuresLive`
-  // is false - see its doc comment for why (the computer-status line).
+  // be (e.g. its text wrapping to 2 lines) - the "why?" reasoning popover floats over
+  // the felt instead (see `.board__headline-reasoning-popover`), so opening/closing it
+  // doesn't affect this measurement at all. Already-settled dice smoothly re-settle
+  // into the newly-shrunk space instead of jumping (see the `top`/`left` transition on
+  // `.board__die-slot`). Falls back to a fixed reserve instead (ignoring the real
+  // measured height) when `topOverlayMeasuresLive` is false - see its doc comment for
+  // why (the computer-status line).
   const reserveTopPct = useOverlayReservePct(
     feltRef,
     topOverlayRef,

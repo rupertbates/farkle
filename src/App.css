@@ -1043,31 +1043,52 @@ body {
   background: rgba(255, 255, 255, 0.32);
 }
 
-/* Part of normal document flow (not floated) so opening it grows `.board__top-overlay`'s
- * measured height, which in turn grows the space reserved for it on the felt (see
- * `useOverlayReservePct` in GameBoard) - guaranteeing dice are never left underneath it. */
+/* Floats below the headline row as a detached card (not part of normal flow) rather
+ * than growing `.board__headline`'s own box - opening/closing it must never change
+ * `.board__top-overlay`'s measured height (see `topOverlayMeasuresLive` in
+ * GameBoard), which would otherwise visibly re-settle the dice underneath just from
+ * toggling this "why?" popover. It's fine for it to briefly overlay a die or two
+ * while open - that's the same tradeoff any floating tooltip/popover makes, and it's
+ * only ever open because the player explicitly asked for it. */
 .board__headline-reasoning-popover {
-  margin: 0.4rem 0.5rem 0;
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0.5rem;
+  right: 0.5rem;
   z-index: 5;
-  padding: 0.5rem 0.65rem;
-  background: rgba(4, 12, 8, 0.72);
-  backdrop-filter: blur(2px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  background: rgba(8, 20, 14, 0.94);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0.6rem;
   font-weight: 400;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
   text-align: left;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
   /* Also opt back into pointer events (see `.board__top-overlay`) so its text remains
    * selectable rather than click-through to the dice behind it. */
   pointer-events: auto;
-  /* Bounds how much space this can ever claim above the dice - on a short, narrow
-   * screen an unbounded popover (plus the roll/bank button bar below) can demand more
-   * height than the felt even has, leaving no room to keep dice clear of both. Scrolls
-   * instead of growing further. */
-  max-height: 7rem;
+  /* Keeps it from ever growing past a sane size on a short screen - scrolls instead. */
+  max-height: 9rem;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* A small triangular "caret" pointing back up at the info button it belongs to, so
+ * the floating card reads as clearly anchored to it rather than a separate, oddly-
+ * placed box. */
+.board__headline-reasoning-popover::before {
+  content: '';
+  position: absolute;
+  top: -0.3rem;
+  right: 0.85rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  background: rgba(8, 20, 14, 0.94);
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  transform: rotate(45deg);
 }
 
 .board__headline-reasoning-popover p {
