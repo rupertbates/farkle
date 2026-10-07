@@ -81,7 +81,7 @@ body {
  * help button uses a plain "?" character instead specifically so it can be styled
  * white like the rest of the icon button's text/border. */
 .app__header-icon-btn--help {
-  color: #fff;
+  color: #dcd8d8;
   font-weight: 700;
 }
 
