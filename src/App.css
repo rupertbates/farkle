@@ -1360,6 +1360,58 @@ body {
   font-weight: 400;
 }
 
+/* The computer-skill control: a labeled group containing a segmented button row,
+ * styled consistently with the toggle rows above/below it in the same overlay. */
+.settings__group {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.settings__group + .settings__toggle,
+.settings__toggle + .settings__group {
+  margin-top: 1rem;
+}
+
+.settings__group-label {
+  display: block;
+  font-weight: 600;
+}
+
+.settings__group .settings__toggle-hint {
+  margin-top: 0.15rem;
+  margin-bottom: 0.6rem;
+}
+
+.settings__segmented {
+  display: inline-flex;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.settings__segmented-btn {
+  padding: 0.4rem 0.9rem;
+  border: none;
+  background: var(--bg);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.settings__segmented-btn + .settings__segmented-btn {
+  border-left: 1px solid var(--panel-border);
+}
+
+.settings__segmented-btn--active {
+  background: var(--accent);
+  color: #06230f;
+  font-weight: 600;
+}
+
+.settings__segmented-btn:hover:not(.settings__segmented-btn--active) {
+  background: var(--panel-border);
+}
+
 .game-over {
   text-align: center;
   background: var(--panel-bg);

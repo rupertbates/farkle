@@ -17,6 +17,34 @@ logic itself.
     `localStorage` under `farkle:setting:pause-after-computer-turn` the same way the
     collapsible panels remember their open/closed state.
 
+- **Show advice** - `App.tsx`'s `showAdvice` state (boolean, defaults to `true`), gates
+  whether the human-turn advisor banner at the top of the board is shown at all.
+  Persisted to `localStorage` under `farkle:setting:show-advice`. Exposed via a checkbox
+  in the "⚙️ Settings" overlay.
+
+- **Computer skill/difficulty** - `useFarkleGame(targetScore, computerMoveDelayMs,
+  riskAwareness, pauseAfterComputerTurn, computerSkill)` (`ComputerSkill`, one of
+  `'easy' | 'normal' | 'hard'`, defaults to `'hard'`). Threaded into
+  `computerDecideMove()` (`src/game/ai.ts`), which looks up a `SKILL_SETTINGS` preset per
+  skill:
+  - `lookaheadDepth` - how many further voluntary rolls the computer's own EV lookahead
+    plays out when deciding bank-vs-continue (passed through to `getAdvisorReport` via
+    the new `AdvisorInput.lookaheadDepth` override). `hard` uses the full
+    `DEFAULT_LOOKAHEAD_DEPTH` (2); `normal` uses 1; `easy` uses 0 (next-roll-only EV).
+  - `mistakeRate` - probability (0-1) the computer deliberately flips its own
+    bank-vs-continue call for the same dice selection, simulating a misjudgment.
+    `hard` is 0 (never), `normal` is 0.1, `easy` is 0.3. An instant-win move is never
+    overridden by a mistake regardless of skill.
+  - The human-facing advisor (`advisorReport` in `useFarkleGame.ts`, shown as read-only
+    reference/comparison) always computes at full strength and is never subject to
+    mistakes - only the computer's own internal decision-making is skill-adjusted, so
+    the UI can show "what the optimal play would have been" alongside what the computer
+    actually chose.
+  - `hard` is deliberately byte-identical to the original always-optimal behavior, so it
+    remains the default and no prior behavior changed for existing players.
+  - Exposed via a 3-way segmented control ("Easy / Normal / Hard") in the "⚙️ Settings"
+    overlay, persisted to `localStorage` under `farkle:setting:computer-skill`.
+
 ## Ready to expose
 
 These are fully implemented and threaded through `useFarkleGame`, just not yet exposed
@@ -49,16 +77,6 @@ to the player via any UI control. `App.tsx` currently hardcodes their defaults.
 
 ## Not yet implemented (ideas only)
 
-- **Lookahead depth for the advisor's EV math** - `getAdvisorReport`'s "continue" value
-  now comes from `getContinuationValue()` (`src/game/probability.ts`), a recursive,
-  depth-limited solver that plays out several further optimal rolls (not just the very
-  next one), so it properly credits chaining through repeated Hot Dice. The depth is
-  currently a fixed internal constant, `DEFAULT_LOOKAHEAD_DEPTH = 2` - not exposed as a
-  setting, since it's an engine accuracy/performance tuning knob rather than a player
-  preference (depth 2 averages well under 2ms per call even across varied game states,
-  so there's little practical reason for a player to want it lower). Flagging here only
-  in case a future "computer difficulty" setting wants to intentionally give the computer
-  a shallower (weaker) lookahead than the human-facing advisor.
 - **Target score** - `App.tsx` currently sets `targetScore` once via
   `useState(DEFAULT_TARGET_SCORE)` with no setter exposed. Making this configurable
   (e.g. 5,000 / 10,000 / 15,000) just needs a UI control wired to that existing state -
@@ -66,9 +84,6 @@ to the player via any UI control. `App.tsx` currently hardcodes their defaults.
 - **Risk-aware advice strength** - if the toggle above proves too blunt, consider a
   3-way setting (Cautious / Balanced / Aggressive) that scales the catch-up/safety bias
   magnitudes in `applyRiskAwareness()` instead of a plain on/off.
-- **Computer difficulty** - the computer currently always plays optimally (best-EV, with
-  the same `riskAwareness` option as the human). A "difficulty" setting could make the
-  computer deliberately suboptimal (e.g. occasionally bank earlier/later than advised, or
-  use a shallower lookahead depth - see above) to give newer players an easier opponent.
 - **Sound effects / animation speed** - independent of computer move pacing, could allow
   turning off the dice-throw animation or muting sound (no sound currently implemented).
+

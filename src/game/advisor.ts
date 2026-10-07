@@ -64,6 +64,13 @@ export interface AdvisorInput {
    * to a future user-configurable "risk profile" setting - see docs/settings.md.
    */
   riskAwareness?: boolean;
+  /**
+   * Overrides how many further voluntary rolls the continuation-EV solver plays out
+   * (see `getContinuationValue`). Defaults to `DEFAULT_LOOKAHEAD_DEPTH`. Only intended
+   * for giving the computer opponent a deliberately shallower (weaker) lookahead at
+   * lower `ComputerSkill` levels - the human-facing advisor always uses the default.
+   */
+  lookaheadDepth?: number;
 }
 
 /**
@@ -119,7 +126,8 @@ function applyRiskAwareness(params: {
  * compares the expected value of banking now vs. rolling the remaining dice again.
  *
  * The "continue" expected value is a recursive, depth-limited lookahead
- * (`getContinuationValue`, depth = `DEFAULT_LOOKAHEAD_DEPTH`): it plays out several
+ * (`getContinuationValue`, depth = `lookaheadDepth` input, defaulting to
+ * `DEFAULT_LOOKAHEAD_DEPTH`): it plays out several
  * further optimal rolls (including the chance of chaining through repeated Hot Dice),
  * not just the very next one, so it properly credits the compounding value of getting
  * down to few dice and refreshing to 6. At depth 0 it is exactly the classic one-roll
@@ -131,6 +139,7 @@ function applyRiskAwareness(params: {
  */
 export function getAdvisorReport(input: AdvisorInput): AdvisorReport {
   const { dice, turnScoreBeforeRoll, playerTotalScore, targetScore, opponentTotalScore, riskAwareness } = input;
+  const lookaheadDepth = input.lookaheadDepth ?? DEFAULT_LOOKAHEAD_DEPTH;
   const candidates = generateSelectionCandidates(dice);
 
   const options: AdvisorRecommendation[] = candidates.map((candidate) => {
@@ -140,7 +149,7 @@ export function getAdvisorReport(input: AdvisorInput): AdvisorReport {
     const stats = getRollDistributionStats(diceRemainingIfContinuing);
 
     const bankEV = turnScoreAfter;
-    const continueEV = getContinuationValue(diceRemainingIfContinuing, turnScoreAfter, DEFAULT_LOOKAHEAD_DEPTH);
+    const continueEV = getContinuationValue(diceRemainingIfContinuing, turnScoreAfter, lookaheadDepth);
 
     const { adjustedContinueEV, riskAdjustmentExplanation } = applyRiskAwareness({
       riskAwareness,

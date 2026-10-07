@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { DEFAULT_TARGET_SCORE } from './game';
-import type { AdvisorReport, ComputerDecision } from './game';
+import type { AdvisorReport, ComputerDecision, ComputerSkill } from './game';
 import { useFarkleGame } from './hooks/useFarkleGame';
 import { GameBoard } from './components/GameBoard';
 import { HeldDiceRail } from './components/HeldDiceRail';
@@ -16,11 +16,23 @@ import './App.css';
 
 const PAUSE_AFTER_COMPUTER_TURN_KEY = 'farkle:setting:pause-after-computer-turn';
 const SHOW_ADVICE_KEY = 'farkle:setting:show-advice';
+const COMPUTER_SKILL_KEY = 'farkle:setting:computer-skill';
+const COMPUTER_SKILLS: ComputerSkill[] = ['easy', 'normal', 'hard'];
 
 function readStoredBoolean(key: string, defaultValue: boolean): boolean {
   try {
     const stored = window.localStorage.getItem(key);
     return stored === null ? defaultValue : stored === 'true';
+  } catch {
+    // localStorage can throw in some privacy modes/environments - just fall back silently.
+    return defaultValue;
+  }
+}
+
+function readStoredComputerSkill(defaultValue: ComputerSkill): ComputerSkill {
+  try {
+    const stored = window.localStorage.getItem(COMPUTER_SKILL_KEY);
+    return stored !== null && (COMPUTER_SKILLS as string[]).includes(stored) ? (stored as ComputerSkill) : defaultValue;
   } catch {
     // localStorage can throw in some privacy modes/environments - just fall back silently.
     return defaultValue;
@@ -33,6 +45,7 @@ export default function App() {
     readStoredBoolean(PAUSE_AFTER_COMPUTER_TURN_KEY, true),
   );
   const [showAdvice, setShowAdvice] = useState(() => readStoredBoolean(SHOW_ADVICE_KEY, true));
+  const [computerSkill, setComputerSkill] = useState<ComputerSkill>(() => readStoredComputerSkill('hard'));
   // Tracks whether any dice have ever been rolled in this game (across every turn), so
   // the board's "Roll to throw the dice" placeholder can be shown only once, at the
   // very start of a new game, rather than reappearing at the start of every turn.
@@ -64,11 +77,21 @@ export default function App() {
     });
   };
 
+  const changeComputerSkill = (next: ComputerSkill) => {
+    setComputerSkill(next);
+    try {
+      window.localStorage.setItem(COMPUTER_SKILL_KEY, next);
+    } catch {
+      // Ignore storage failures - the setting still works for the rest of this session.
+    }
+  };
+
   const { game, isHumanTurn, advisorReport, computerDecision, selectionValidity, actions, canBank } = useFarkleGame(
     targetScore,
     undefined,
     undefined,
     pauseAfterComputerTurn,
+    computerSkill,
   );
 
   const { turn, players, winnerId } = game;
@@ -359,6 +382,8 @@ export default function App() {
           onTogglePauseAfterComputerTurn={togglePauseAfterComputerTurn}
           showAdvice={showAdvice}
           onToggleShowAdvice={toggleShowAdvice}
+          computerSkill={computerSkill}
+          onChangeComputerSkill={changeComputerSkill}
           onClose={() => setShowSettings(false)}
         />
       )}

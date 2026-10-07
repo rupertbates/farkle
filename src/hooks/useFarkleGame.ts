@@ -15,6 +15,7 @@ import {
   validateCurrentSelection,
   type AdvisorReport,
   type ComputerDecision,
+  type ComputerSkill,
   type GameState,
 } from '../game';
 
@@ -50,6 +51,12 @@ export function useFarkleGame(
    * for players who'd rather play faster without reviewing every computer turn.
    */
   pauseAfterComputerTurn = true,
+  /**
+   * Difficulty preset for the computer opponent's own decision-making - does not
+   * affect the human-facing advisor (`advisorReport` below), which always computes
+   * at full strength. Defaults to `'hard'`, the original always-optimal behavior.
+   */
+  computerSkill: ComputerSkill = 'hard',
 ) {
   const [game, setGame] = useState<GameState>(() => createInitialGameState(targetScore));
   const [computerDecision, setComputerDecision] = useState<ComputerDecision | null>(null);
@@ -227,6 +234,7 @@ export function useFarkleGame(
           target,
           players.human.totalScore,
           riskAwareness,
+          computerSkill,
         );
         setComputerDecision(decision);
         setGame((g) => {
@@ -256,7 +264,7 @@ export function useFarkleGame(
     }
 
     return undefined;
-  }, [game, computerMoveDelayMs, computerDecision, riskAwareness, debugRng]);
+  }, [game, computerMoveDelayMs, computerDecision, riskAwareness, computerSkill, debugRng]);
 
   // When the computer's turn has ended (Farkled, or banked and paused in
   // `turn-banked`) and pausing for review is disabled, automatically advance past it

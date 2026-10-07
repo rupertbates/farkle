@@ -1,8 +1,18 @@
+import type { ComputerSkill } from '../game';
+
+const SKILL_OPTIONS: { value: ComputerSkill; label: string }[] = [
+  { value: 'easy', label: 'Easy' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'hard', label: 'Hard' },
+];
+
 export interface SettingsOverlayProps {
   pauseAfterComputerTurn: boolean;
   onTogglePauseAfterComputerTurn: () => void;
   showAdvice: boolean;
   onToggleShowAdvice: () => void;
+  computerSkill: ComputerSkill;
+  onChangeComputerSkill: (skill: ComputerSkill) => void;
   onClose: () => void;
 }
 
@@ -12,6 +22,8 @@ export function SettingsOverlay({
   onTogglePauseAfterComputerTurn,
   showAdvice,
   onToggleShowAdvice,
+  computerSkill,
+  onChangeComputerSkill,
   onClose,
 }: SettingsOverlayProps) {
   return (
@@ -22,6 +34,27 @@ export function SettingsOverlay({
         </button>
         <h2>⚙️ Settings</h2>
         <div className="fullscreen-overlay__body">
+          <div className="settings__group">
+            <span className="settings__group-label">🤖 Computer skill</span>
+            <span className="settings__toggle-hint">
+              How well the computer opponent plays. "Hard" always plays the mathematically optimal move; lower
+              settings make it think less far ahead and occasionally second-guess a good decision.
+            </span>
+            <div className="settings__segmented" role="radiogroup" aria-label="Computer skill">
+              {SKILL_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={computerSkill === option.value}
+                  className={`settings__segmented-btn${computerSkill === option.value ? ' settings__segmented-btn--active' : ''}`}
+                  onClick={() => onChangeComputerSkill(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <label className="settings__toggle">
             <input type="checkbox" checked={showAdvice} onChange={onToggleShowAdvice} />
             <span>

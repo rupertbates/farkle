@@ -36,6 +36,13 @@ export interface SelectionCandidate {
 /** Players in the game. */
 export type PlayerId = 'human' | 'computer';
 
+/**
+ * Difficulty preset for the computer opponent's own decision-making (dice selection +
+ * bank/continue calls) - does not affect the human-facing advisor, which always uses
+ * full-strength EV math. 'hard' reproduces the original always-optimal behavior.
+ */
+export type ComputerSkill = 'easy' | 'normal' | 'hard';
+
 export interface PlayerState {
   id: PlayerId;
   name: string;
