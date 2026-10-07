@@ -44,8 +44,45 @@ body {
 }
 
 .app__header {
+  position: relative;
   text-align: center;
   margin-bottom: 1rem;
+}
+
+/* Help/settings icon buttons pinned to the top-right of the header, to the right of
+ * the title - positioned absolutely so they don't affect the title's own centering. */
+.app__header-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.app__header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 50%;
+  background: var(--panel-bg);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.app__header-icon-btn:hover {
+  background: var(--panel-border);
+}
+
+/* The settings cog (⚙️) is a color emoji with its own fixed glyph colors, but the
+ * help button uses a plain "?" character instead specifically so it can be styled
+ * white like the rest of the icon button's text/border. */
+.app__header-icon-btn--help {
+  color: #fff;
+  font-weight: 700;
 }
 
 .app__header h1 {
@@ -342,6 +379,16 @@ body {
     font-size: 1.5rem;
   }
 
+  .app__header-actions {
+    gap: 0.35rem;
+  }
+
+  .app__header-icon-btn {
+    width: 1.9rem;
+    height: 1.9rem;
+    font-size: 0.95rem;
+  }
+
   .app__header-underline {
     margin: 0 auto 0.4rem;
   }
@@ -445,7 +492,7 @@ body {
     rgba(4, 12, 8, 0) 100%
   );
   display: flex;
-  justify-content: center;
+  justify-content: stretch;
 }
 
 /* The end-of-turn (Farkle / banked) message pops over the board itself instead of
@@ -882,16 +929,20 @@ body {
 /* The persistent one-line advisor headline shown atop the board every roll (see
  * `topOverlay` in App.tsx). Neutral styling normally; `--hot` adds the gold hot-dice
  * treatment when the current best option scores with all six dice. */
+/* Fixed-width banner spanning the full felt: the action icon (roll/bank/hot-dice/
+ * computer-status) pinned to the left, the message filling the middle, and the "why?"
+ * info button pinned to the right - rather than everything centered as one run of
+ * inline text. */
 .board__headline {
+  position: relative;
   background: rgba(15, 23, 20, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 0.5rem;
-  padding: 0.35rem 0.75rem;
+  padding: 0.5rem 1rem;
   margin: 0;
   font-weight: 600;
-  font-size: 0.8rem;
-  text-align: center;
-  max-width: 100%;
+  font-size: 0.95rem;
+  width: 100%;
 }
 
 .board__headline--hot {
@@ -899,13 +950,80 @@ body {
   border-color: var(--gold);
 }
 
-.board__headline p {
-  margin: 0;
+.board__headline-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.computer-status {
-  color: var(--text-dim);
-  font-style: italic;
+.board__headline-icon {
+  flex: 0 0 auto;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.board__headline-text {
+  flex: 1 1 auto;
+  margin: 0;
+  text-align: left;
+}
+
+/* The small "ⓘ" button at the end of the headline that reveals the advisor's
+ * reasoning text in a popover - pinned to the right of the banner. */
+.board__headline-info-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Invisible placeholder matching the info button's footprint when there's no
+ * reasoning to show (e.g. the computer-turn status line), so the text column stays
+ * aligned the same whether or not the button is present. */
+.board__headline-info-btn-spacer {
+  flex: 0 0 auto;
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.board__headline-info-btn:hover,
+.board__headline-info-btn[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* Positioned absolutely (rather than in normal flow) so opening it never grows
+ * `.board__headline`'s measured height - that height drives how much felt space is
+ * reserved for the overlay (see `useOverlayReservePct`), and growing it would shove
+ * the dice down the felt. Instead it simply floats over the top of the dice. */
+.board__headline-reasoning-popover {
+  position: absolute;
+  left: 0.5rem;
+  right: 0.5rem;
+  top: calc(100% + 0.4rem);
+  z-index: 5;
+  padding: 0.5rem 0.65rem;
+  background: rgba(4, 12, 8, 0.72);
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.5rem;
+  font-weight: 400;
+  font-size: 0.75rem;
+  text-align: left;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.board__headline-reasoning-popover p {
+  margin: 0;
 }
 
 .turn-log {
@@ -1244,4 +1362,74 @@ body {
   border: 1px solid var(--accent);
   border-radius: 0.75rem;
   padding: 2rem;
+}
+
+/* Full-screen overlays for the header's Help and Settings buttons - these cover the
+ * whole viewport (not just the board) since they're reference/configuration content
+ * the player may want regardless of what's currently happening on the felt. */
+.fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(4, 10, 7, 0.72);
+  overflow-y: auto;
+}
+
+.fullscreen-overlay__card {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.9rem;
+  padding: 1.75rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.fullscreen-overlay__card h2 {
+  margin-top: 0;
+}
+
+.fullscreen-overlay__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.fullscreen-overlay__close:hover {
+  background: var(--panel-border);
+}
+
+.fullscreen-overlay__body section + section {
+  margin-top: 1.25rem;
+}
+
+.fullscreen-overlay__body h3 {
+  margin-bottom: 0.4rem;
+}
+
+.fullscreen-overlay__body ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.fullscreen-overlay__body li + li {
+  margin-top: 0.4rem;
 }

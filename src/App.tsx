@@ -10,6 +10,8 @@ import { ScoreBoard } from './components/ScoreBoard';
 import { AdvisorPanel } from './components/AdvisorPanel';
 import { CollapsiblePanel } from './components/CollapsiblePanel';
 import { TurnLog } from './components/TurnLog';
+import { HelpOverlay } from './components/HelpOverlay';
+import { SettingsOverlay } from './components/SettingsOverlay';
 import './App.css';
 
 const PAUSE_AFTER_COMPUTER_TURN_KEY = 'farkle:setting:pause-after-computer-turn';
@@ -33,6 +35,8 @@ export default function App() {
   // the board's "Roll to throw the dice" placeholder can be shown only once, at the
   // very start of a new game, rather than reappearing at the start of every turn.
   const [hasRolledOnce, setHasRolledOnce] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const togglePauseAfterComputerTurn = () => {
     setPauseAfterComputerTurn((prev) => {
@@ -104,12 +108,15 @@ export default function App() {
   const continueBtnLabel = nextTurnIsHuman ? 'Roll 6 dice' : 'Continue';
   const continueBtnClassName = nextTurnIsHuman ? 'btn btn--primary' : 'btn';
 
-  let computerStatus = 'Computer is playing…';
+  let computerStatus: { icon: string; text: string } = { icon: '🤖', text: 'Computer is playing…' };
   if (!isHumanTurn && !isGameOver) {
     if (turn.phase === 'awaiting-roll') {
-      computerStatus = 'Computer is about to roll…';
+      computerStatus = { icon: '🎲', text: 'Computer is about to roll…' };
     } else if (turn.phase === 'awaiting-selection') {
-      computerStatus = turn.selectedIndices.length > 0 ? 'Computer is locking in its dice…' : 'Computer is deciding…';
+      computerStatus =
+        turn.selectedIndices.length > 0
+          ? { icon: '🔒', text: 'Computer is locking in its dice…' }
+          : { icon: '🤔', text: 'Computer is deciding…' };
     }
   }
 
@@ -212,23 +219,26 @@ export default function App() {
   // the next roll (or bank) formally commits them.
   const displayedTurnScore = turn.turnScore + (selectionValidity.valid ? selectionValidity.score : 0);
 
-  // A persistent one-line advisor headline pinned to the top of the board felt
-  // (mirroring the Roll/Bank controls pinned to the bottom), present every roll -
-  // not just on hot dice - showing the best option's recommendation. It reads
-  // straight off the live advisor report for whoever is currently deciding, so a
-  // hot-dice-qualifying roll is flagged the instant those dice are thrown (not
-  // only after the player locks it in and the fresh set is re-rolled - that re-roll
-  // is itself just another roll, and only shows the hot-dice phrasing again if its
-  // own best option happens to be hot dice too).
-  let overlayContent: { headline: string; isHotDice: boolean } | null = null;
-  if (turn.phase === 'awaiting-selection' && advisorReport) {
+  // A persistent one-line banner pinned to the top of the board felt (mirroring the
+  // Roll/Bank controls pinned to the bottom). During the human's turn it's the
+  // advisor's live headline recommendation; during the computer's turn it's swapped
+  // for the plain status line (e.g. "Computer is deciding…") - the human doesn't get
+  // the computer's advisor reasoning surfaced as if it were their own recommendation,
+  // and this replaces the separate status paragraph that used to sit under the board.
+  let overlayContent: { icon: string; text: string; isHotDice: boolean; reasoning: string } | null = null;
+  if (isHumanTurn && turn.phase === 'awaiting-selection' && advisorReport) {
     const { best } = advisorReport;
     // Skip the "then bank/keep rolling" suffix for a "keep some, reroll the rest"
     // candidate - its label already states that it's continuing, so appending the
     // action again would just repeat it (same condition the sidebar advisor uses).
     const showActionSuffix = !(best.recommendedAction === 'continue' && best.candidate.label.includes('reroll the rest'));
     const actionSuffix = showActionSuffix ? ` - then ${best.recommendedAction === 'bank' ? 'bank' : 'keep rolling'}` : '';
-    overlayContent = { headline: `${best.candidate.label}${actionSuffix}`, isHotDice: best.isHotDice };
+    const reasoning = best.recommendedAction === 'bank' ? best.bank.explanation : best.continue.explanation;
+    const actionIcon = best.recommendedAction === 'bank' ? '🏦' : '🎲';
+    const text = best.isHotDice ? `Hot dice! ${best.candidate.label}${actionSuffix}` : `${best.candidate.label}${actionSuffix}`;
+    overlayContent = { icon: best.isHotDice ? '🔥' : actionIcon, text, isHotDice: best.isHotDice, reasoning };
+  } else if (!isHumanTurn && !isGameOver && turn.phase !== 'farkled' && turn.phase !== 'turn-banked') {
+    overlayContent = { icon: computerStatus.icon, text: computerStatus.text, isHotDice: false, reasoning: '' };
   }
 
   // Keeps the headline's last content (and, critically, the board space reserved for
@@ -237,11 +247,21 @@ export default function App() {
   // reserved top space shrinks to zero as soon as `overlayContent` goes null, and the
   // dice still visible beneath the end-of-turn popover visibly jump upward to fill it.
   // Same derived-during-render approach as `frozenComputerView` above.
-  const [frozenOverlayContent, setFrozenOverlayContent] = useState<{ headline: string; isHotDice: boolean } | null>(
-    null,
-  );
-  if (overlayContent && overlayContent.headline !== frozenOverlayContent?.headline) {
+  const [frozenOverlayContent, setFrozenOverlayContent] = useState<{
+    icon: string;
+    text: string;
+    isHotDice: boolean;
+    reasoning: string;
+  } | null>(null);
+  if (overlayContent && overlayContent.text !== frozenOverlayContent?.text) {
     setFrozenOverlayContent(overlayContent);
+  }
+
+  // The "why?" popover explaining the headline's reasoning should start closed on
+  // every new roll/selection rather than staying open from a prior headline.
+  const [showHeadlineReasoning, setShowHeadlineReasoning] = useState(false);
+  if (overlayContent && overlayContent.text !== frozenOverlayContent?.text && showHeadlineReasoning) {
+    setShowHeadlineReasoning(false);
   }
 
   // Covers every phase where dice from this turn are still (or again) sitting on the
@@ -257,10 +277,35 @@ export default function App() {
 
   let topOverlay: ReactNode = null;
   if (shownOverlayContent) {
-    const { headline, isHotDice } = shownOverlayContent;
+    const { icon, text, isHotDice, reasoning } = shownOverlayContent;
     topOverlay = (
       <div className={`board__headline${isHotDice ? ' board__headline--hot' : ''}`}>
-        <p>{isHotDice ? `🔥 Hot dice! ${headline}` : headline}</p>
+        <div className="board__headline-row">
+          <span className="board__headline-icon" aria-hidden="true">
+            {icon}
+          </span>
+          <p className="board__headline-text">{text}</p>
+          {/* The computer-turn status line has no reasoning to show, so it gets no
+           * "why?" button at all - only the human's advisor recommendation does. */}
+          {reasoning ? (
+            <button
+              type="button"
+              className="board__headline-info-btn"
+              aria-label="Why?"
+              aria-expanded={showHeadlineReasoning}
+              onClick={() => setShowHeadlineReasoning((prev) => !prev)}
+            >
+              ⓘ
+            </button>
+          ) : (
+            <span className="board__headline-info-btn-spacer" aria-hidden="true" />
+          )}
+        </div>
+        {reasoning && showHeadlineReasoning && (
+          <div className="board__headline-reasoning-popover" role="tooltip">
+            <p>{reasoning}</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -268,12 +313,39 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
+        <div className="app__header-actions">
+          <button
+            type="button"
+            className="app__header-icon-btn app__header-icon-btn--help"
+            aria-label="How to play"
+            onClick={() => setShowHelp(true)}
+          >
+            ?
+          </button>
+          <button
+            type="button"
+            className="app__header-icon-btn"
+            aria-label="Settings"
+            onClick={() => setShowSettings(true)}
+          >
+            ⚙️
+          </button>
+        </div>
         <h1>
           <span aria-hidden="true">🎲</span> <span className="app__header-wordmark">Farkle</span>
         </h1>
         <div className="app__header-underline" />
         <p className="app__subtitle">Play to {targetScore.toLocaleString()} points against the computer</p>
       </header>
+
+      {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
+      {showSettings && (
+        <SettingsOverlay
+          pauseAfterComputerTurn={pauseAfterComputerTurn}
+          onTogglePauseAfterComputerTurn={togglePauseAfterComputerTurn}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
 
       <ScoreBoard game={game} />
 
@@ -318,10 +390,6 @@ export default function App() {
                 turnScore={displayedTurnScore}
               />
             </div>
-
-            {!isHumanTurn && !isGameOver && turn.phase !== 'farkled' && turn.phase !== 'turn-banked' && (
-              <p className="computer-status">{computerStatus}</p>
-            )}
           </section>
 
           <aside className="app__sidebar">
@@ -362,25 +430,6 @@ export default function App() {
             <section className="panel panel--scoring">
               <CollapsiblePanel title="📖 Scoring guide" storageKey="farkle:panel:scoring-open" defaultOpen={false}>
                 <ScoringChart />
-              </CollapsiblePanel>
-            </section>
-
-            <section className="panel panel--settings">
-              <CollapsiblePanel title="⚙️ Settings" storageKey="farkle:panel:settings-open" defaultOpen={false}>
-                <label className="settings__toggle">
-                  <input
-                    type="checkbox"
-                    checked={pauseAfterComputerTurn}
-                    onChange={togglePauseAfterComputerTurn}
-                  />
-                  <span>
-                    Pause after computer's turn
-                    <span className="settings__toggle-hint">
-                      Show a "Continue" button after the computer banks or Farkles, so you can review its move
-                      before play passes back. Turn off to let the computer's turns advance automatically.
-                    </span>
-                  </span>
-                </label>
               </CollapsiblePanel>
             </section>
           </aside>

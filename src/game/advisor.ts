@@ -153,7 +153,10 @@ export function getAdvisorReport(input: AdvisorInput): AdvisorReport {
     const bank: ActionEvaluation = {
       action: 'bank',
       expectedValue: bankEV,
-      explanation: `Banking locks in ${turnScoreAfter.toLocaleString()} points this turn for certain.`,
+      explanation:
+        `Banking locks in ${turnScoreAfter.toLocaleString()} points this turn for certain, ` +
+        `which is higher than ~${Math.round(continueEV).toLocaleString()} points, the expected value of continuing ` +
+        `(Farkle risk ${(stats.farkleProbability * 100).toFixed(1)}%).`,
     };
     const continueEval: ActionEvaluation = {
       action: 'continue',
