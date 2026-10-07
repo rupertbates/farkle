@@ -32,6 +32,16 @@ export interface GameBoardProps {
    *  left stranded under it after it grows (e.g. wrapped text, or opening the
    *  reasoning popover). See `useOverlayReservePct`. */
   topOverlay?: ReactNode;
+  /** Whether `topOverlay`'s reserved space should track its real, live-measured
+   *  height (for the human's advisor banner, whose reasoning popover can open and
+   *  genuinely needs the room) or stay at one fixed, generously-sized reserve (for
+   *  the computer-turn status line, whose short phrase changes - and so wraps to a
+   *  different number of lines - every time the computer moves through a phase, with
+   *  nothing for the player to actually read "under"). Fixed avoids dice visibly
+   *  re-settling on every such change for content nobody's interacting with, while
+   *  still reserving enough room that a 2-line wrap never overlaps a die - just
+   *  without chasing every intermediate size. Defaults to `true` (live). */
+  topOverlayMeasuresLive?: boolean;
   /** The end-of-turn (Farkle / banked) message, shown as a centered popover on top of
    *  the felt instead of a separate block below the board. It's fine for this to cover
    *  any dice still showing underneath - the turn's already over. */
@@ -54,6 +64,12 @@ interface DieLayout {
  *  guess alone would under- or over-reserve space depending on which is showing. */
 const CONTROLS_RESERVED_PCT_FALLBACK = 24;
 const TOP_OVERLAY_RESERVED_PCT_FALLBACK = 12;
+
+/** Fixed reserve used for the computer-turn status line instead of its measured
+ *  height (see `topOverlayMeasuresLive`) - sized generously enough to comfortably fit
+ *  its icon row plus a full second wrapped line on the narrowest supported felt,
+ *  confirmed visually, so it can stay fixed without ever risking overlap. */
+const TOP_OVERLAY_STATIC_RESERVE_PCT = 26;
 
 /** Ceilings on how much of the felt's height an overlay may ever claim, so a single
  *  die or two is never asked to squeeze into literally zero space. The top banner
@@ -84,18 +100,22 @@ const DIE_FOOTPRINT_RADIUS_PX = 32;
 /** Measures `overlayRef`'s rendered height as a percentage of `feltRef`'s height,
  *  live, so the dice-reserved area always matches the actual overlay - which varies in
  *  content by turn phase and viewport width - instead of relying on one fixed guess
- *  for every case. Used for both the bottom controls bar and the top status banner. */
+ *  for every case. Used for both the bottom controls bar and the top status banner.
+ *  Pass `measureLive: false` to skip the live measurement altogether and just reserve
+ *  a fixed `fallbackPct` instead - for content whose size changes often but isn't
+ *  worth re-settling already-placed dice over (see `topOverlayMeasuresLive`). */
 function useOverlayReservePct(
   feltRef: React.RefObject<HTMLDivElement | null>,
   overlayRef: React.RefObject<HTMLDivElement | null>,
   active: boolean,
   fallbackPct: number,
   maxPct: number,
+  measureLive: boolean = true,
 ): number {
   const [pct, setPct] = useState(fallbackPct);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || !measureLive) return;
     const felt = feltRef.current;
     const overlay = overlayRef.current;
     if (!felt || !overlay) return;
@@ -115,9 +135,9 @@ function useOverlayReservePct(
     observer.observe(felt);
     observer.observe(overlay);
     return () => observer.disconnect();
-  }, [active, feltRef, overlayRef, fallbackPct, maxPct]);
+  }, [active, feltRef, overlayRef, fallbackPct, maxPct, measureLive]);
 
-  return active ? pct : 0;
+  return active ? (measureLive ? pct : fallbackPct) : 0;
 }
 
 /** Tracks `ref`'s rendered pixel height live, so percentage-based sizing elsewhere
@@ -234,6 +254,7 @@ export function GameBoard({
   showInitialPlaceholder,
   controlsOverlay,
   topOverlay,
+  topOverlayMeasuresLive = true,
   popover,
 }: GameBoardProps) {
   const feltRef = useRef<HTMLDivElement>(null);
@@ -251,13 +272,16 @@ export function GameBoard({
   // be - including the "why?" reasoning popover, which is part of normal document flow
   // (not floated) specifically so opening it grows this measurement too. Already-
   // settled dice smoothly re-settle into the newly-shrunk space instead of jumping
-  // (see the `top`/`left` transition on `.board__die-slot`).
+  // (see the `top`/`left` transition on `.board__die-slot`). Falls back to a fixed
+  // reserve instead (ignoring the real measured height) when `topOverlayMeasuresLive`
+  // is false - see its doc comment for why (the computer-status line).
   const reserveTopPct = useOverlayReservePct(
     feltRef,
     topOverlayRef,
     Boolean(topOverlay),
-    TOP_OVERLAY_RESERVED_PCT_FALLBACK,
+    topOverlayMeasuresLive ? TOP_OVERLAY_RESERVED_PCT_FALLBACK : TOP_OVERLAY_STATIC_RESERVE_PCT,
     TOP_OVERLAY_RESERVE_PCT_MAX,
+    topOverlayMeasuresLive,
   );
 
   // Converts `DIE_FOOTPRINT_RADIUS_PX` into a felt-relative percentage so it scales

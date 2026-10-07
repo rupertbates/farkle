@@ -377,6 +377,7 @@ export default function App() {
                 showInitialPlaceholder={!hasRolledOnce}
                 controlsOverlay={controlsOverlay}
                 topOverlay={topOverlay}
+                topOverlayMeasuresLive={Boolean(shownOverlayContent?.reasoning)}
                 popover={popoverContent}
               />
               <HeldDiceRail
