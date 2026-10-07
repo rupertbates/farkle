@@ -15,37 +15,52 @@ function nOfAKindScore(value: DieValue, count: number): number {
 }
 
 /**
- * Scores an exact group of dice (e.g. the dice a player wants to bank this roll).
- * `valid` is false if any die in the group does not contribute to the score -
- * a legal selection must use every die it contains.
+ * Checks the two "use all 6 dice at once" special combos (straight, three pairs),
+ * shared by `scoreGroup` and `findBestSelection` - both worth 1500 regardless of face
+ * values, and not expressible as the usual per-value rules below. Returns `null` if
+ * `values` isn't one of these (the normal per-value scoring then applies instead).
  */
-export function scoreGroup(values: DieValue[]): ScoreResult {
-  const breakdown: ScoreBreakdownItem[] = [];
-  let score = 0;
+function scoreSixDiceSpecial(values: DieValue[]): ScoreResult | null {
+  if (values.length !== 6) return null;
 
-  if (values.length === 6) {
-    const sorted = [...values].sort();
-    const isStraight = sorted.join(',') === '1,2,3,4,5,6';
-    if (isStraight) {
-      return {
-        valid: true,
-        score: 1500,
-        breakdown: [{ description: 'Straight (1-2-3-4-5-6)', values: sorted, points: 1500 }],
-      };
-    }
-    const counts = tally(values);
-    const pairValues = (Object.entries(counts) as [string, number][]).filter(([, c]) => c === 2);
-    if (pairValues.length === 3) {
-      return {
-        valid: true,
-        score: 1500,
-        breakdown: [{ description: 'Three pairs', values: [...values].sort(), points: 1500 }],
-      };
-    }
+  const sorted = [...values].sort();
+  if (sorted.join(',') === '1,2,3,4,5,6') {
+    return {
+      valid: true,
+      score: 1500,
+      breakdown: [{ description: 'Straight (1-2-3-4-5-6)', values: sorted, points: 1500 }],
+    };
   }
 
   const counts = tally(values);
-  let usedCount = 0;
+  const pairValues = (Object.entries(counts) as [string, number][]).filter(([, c]) => c === 2);
+  if (pairValues.length === 3) {
+    return {
+      valid: true,
+      score: 1500,
+      breakdown: [{ description: 'Three pairs', values: sorted, points: 1500 }],
+    };
+  }
+
+  return null;
+}
+
+interface ScoredValueGroup {
+  value: DieValue;
+  /** How many of this face are taken by this group (always matches `counts[value]` -
+   *  there's no partial-taking at this level, that's handled by the caller). */
+  count: number;
+  points: number;
+  description: string;
+}
+
+/**
+ * Scores every individually-scoring run of same-face dice (3+ of a kind, lone 1s, lone
+ * 5s) - the per-value rules shared by `scoreGroup` (does this exact set of dice fully
+ * score?) and `findBestSelection` (which dice should be greedily taken from a roll?).
+ */
+function scoreValueGroups(counts: Record<DieValue, number>): ScoredValueGroup[] {
+  const groups: ScoredValueGroup[] = [];
 
   for (const key of Object.keys(counts)) {
     const value = Number(key) as DieValue;
@@ -53,25 +68,34 @@ export function scoreGroup(values: DieValue[]): ScoreResult {
     if (count === 0) continue;
 
     if (count >= 3) {
-      const points = nOfAKindScore(value, count);
-      breakdown.push({
-        description: `${count} of a kind (${value}s)`,
-        values: Array(count).fill(value) as DieValue[],
-        points,
-      });
-      score += points;
-      usedCount += count;
-    } else if (value === 1) {
-      breakdown.push({ description: count === 1 ? 'Single 1' : `${count} x single 1`, values: Array(count).fill(1) as DieValue[], points: count * 100 });
-      score += count * 100;
-      usedCount += count;
-    } else if (value === 5) {
-      breakdown.push({ description: count === 1 ? 'Single 5' : `${count} x single 5`, values: Array(count).fill(5) as DieValue[], points: count * 50 });
-      score += count * 50;
-      usedCount += count;
+      groups.push({ value, count, points: nOfAKindScore(value, count), description: `${count} of a kind (${value}s)` });
+    } else if (value === 1 || value === 5) {
+      const points = value === 1 ? count * 100 : count * 50;
+      groups.push({ value, count, points, description: count === 1 ? `Single ${value}` : `${count} x single ${value}` });
     }
-    // other values with count < 3 do not score and are left un-counted
+    // other values with count < 3 do not score and are left out of the groups
   }
+
+  return groups;
+}
+
+/**
+ * Scores an exact group of dice (e.g. the dice a player wants to bank this roll).
+ * `valid` is false if any die in the group does not contribute to the score -
+ * a legal selection must use every die it contains.
+ */
+export function scoreGroup(values: DieValue[]): ScoreResult {
+  const special = scoreSixDiceSpecial(values);
+  if (special) return special;
+
+  const groups = scoreValueGroups(tally(values));
+  const breakdown: ScoreBreakdownItem[] = groups.map((g) => ({
+    description: g.description,
+    values: Array(g.count).fill(g.value) as DieValue[],
+    points: g.points,
+  }));
+  const score = groups.reduce((sum, g) => sum + g.points, 0);
+  const usedCount = groups.reduce((sum, g) => sum + g.count, 0);
 
   return { valid: usedCount === values.length, score, breakdown };
 }
@@ -91,59 +115,24 @@ export function findBestSelection(values: DieValue[]): {
   remainingIndices: number[];
   result: ScoreResult;
 } {
-  if (values.length === 6) {
-    const sorted = [...values].sort();
-    if (sorted.join(',') === '1,2,3,4,5,6') {
-      return {
-        selectedIndices: values.map((_, i) => i),
-        remainingIndices: [],
-        result: {
-          valid: true,
-          score: 1500,
-          breakdown: [{ description: 'Straight (1-2-3-4-5-6)', values: sorted, points: 1500 }],
-        },
-      };
-    }
-    const counts = tally(values);
-    const pairEntries = (Object.entries(counts) as [string, number][]).filter(([, c]) => c === 2);
-    if (pairEntries.length === 3) {
-      return {
-        selectedIndices: values.map((_, i) => i),
-        remainingIndices: [],
-        result: {
-          valid: true,
-          score: 1500,
-          breakdown: [{ description: 'Three pairs', values: sorted, points: 1500 }],
-        },
-      };
-    }
+  const special = scoreSixDiceSpecial(values);
+  if (special) {
+    return { selectedIndices: values.map((_, i) => i), remainingIndices: [], result: special };
   }
 
-  const counts = tally(values);
-  const breakdown: ScoreBreakdownItem[] = [];
-  let score = 0;
+  const groups = scoreValueGroups(tally(values));
+  const breakdown: ScoreBreakdownItem[] = groups.map((g) => ({
+    description: g.description,
+    values: Array(g.count).fill(g.value) as DieValue[],
+    points: g.points,
+  }));
+  const score = groups.reduce((sum, g) => sum + g.points, 0);
+
+  const takenPerValue: Record<DieValue, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+  for (const g of groups) takenPerValue[g.value] = g.count;
+
   const selectedIndices: number[] = [];
   const remainingIndices: number[] = [];
-  const takenPerValue: Record<DieValue, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-
-  for (const key of Object.keys(counts)) {
-    const value = Number(key) as DieValue;
-    const count = counts[value];
-    if (count === 0) continue;
-
-    if (count >= 3) {
-      const points = nOfAKindScore(value, count);
-      breakdown.push({ description: `${count} of a kind (${value}s)`, values: Array(count).fill(value) as DieValue[], points });
-      score += points;
-      takenPerValue[value] = count;
-    } else if (value === 1 || value === 5) {
-      const points = value === 1 ? count * 100 : count * 50;
-      breakdown.push({ description: count === 1 ? `Single ${value}` : `${count} x single ${value}`, values: Array(count).fill(value) as DieValue[], points });
-      score += points;
-      takenPerValue[value] = count;
-    }
-  }
-
   values.forEach((v, i) => {
     if (takenPerValue[v] > 0) {
       takenPerValue[v]--;
