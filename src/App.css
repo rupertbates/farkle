@@ -493,6 +493,12 @@ body {
   );
   display: flex;
   justify-content: stretch;
+  /* The banner only visually overlays the felt (see the GameBoard doc comment on
+   * `topOverlay`) - it must never block dice underneath it from being clicked,
+   * including the transparent-background edges of its own box and any blank space
+   * when wrapped text makes it taller than usual. Only its actually-interactive
+   * children (the "why?" info button and its popover) opt back into pointer events. */
+  pointer-events: none;
 }
 
 /* The end-of-turn (Farkle / banked) message pops over the board itself instead of
@@ -985,6 +991,9 @@ body {
   font-size: 0.9rem;
   line-height: 1;
   cursor: pointer;
+  /* `.board__top-overlay` disables pointer events so dice underneath stay clickable -
+   * opt this specific button back in since it's the one actually-interactive part. */
+  pointer-events: auto;
 }
 
 /* Invisible placeholder matching the info button's footprint when there's no
@@ -1020,6 +1029,9 @@ body {
   font-size: 0.75rem;
   text-align: left;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  /* Also opt back into pointer events (see `.board__top-overlay`) so its text remains
+   * selectable rather than click-through to the dice behind it. */
+  pointer-events: auto;
 }
 
 .board__headline-reasoning-popover p {
