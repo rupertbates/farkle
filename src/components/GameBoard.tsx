@@ -26,9 +26,11 @@ export interface GameBoardProps {
    *  When present, dice are scattered only in the remaining space above it (see
    *  `useOverlayReservePct`) so live dice never land underneath the buttons. */
   controlsOverlay?: ReactNode;
-  /** A small status banner (e.g. "Hot dice!") pinned to the top of the felt, mirroring
-   *  `controlsOverlay` at the bottom. Dice are scattered only below it so none land
-   *  underneath. */
+  /** A small status banner (e.g. "Hot dice!") pinned to the top of the felt. Dice are
+   *  scattered below a fixed reserved height, not dynamically grown to match the
+   *  banner's actual (content-dependent) height, so it's fine - and expected - for a
+   *  taller-than-usual banner (e.g. wrapped text) to overlap/cover dice underneath
+   *  rather than pushing them further down the board. */
   topOverlay?: ReactNode;
   /** The end-of-turn (Farkle / banked) message, shown as a centered popover on top of
    *  the felt instead of a separate block below the board. It's fine for this to cover
@@ -174,19 +176,19 @@ export function GameBoard({
 }: GameBoardProps) {
   const feltRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const topOverlayRef = useRef<HTMLDivElement>(null);
   const reserveBottomPct = useOverlayReservePct(
     feltRef,
     overlayRef,
     Boolean(controlsOverlay),
     CONTROLS_RESERVED_PCT_FALLBACK,
   );
-  const reserveTopPct = useOverlayReservePct(
-    feltRef,
-    topOverlayRef,
-    Boolean(topOverlay),
-    TOP_OVERLAY_RESERVED_PCT_FALLBACK,
-  );
+  // Unlike the bottom controls bar, the top banner's reserved space is intentionally
+  // fixed rather than growing with its measured height: its text length varies a lot
+  // (one line vs. wrapping to two), and growing the reserve to match would keep
+  // shoving dice further down every time it wraps. Instead it stays a fixed height and
+  // simply overlays (z-index) whatever dice end up underneath it when it's taller than
+  // usual - see `.board__top-overlay`.
+  const reserveTopPct = topOverlay ? TOP_OVERLAY_RESERVED_PCT_FALLBACK : 0;
 
   // The randomized cell/jitter/rotation assignment, computed once per roll (keyed by
   // rollId) so re-renders - including the reserved-space recalculation below settling
@@ -253,7 +255,7 @@ export function GameBoard({
         )}
 
         {topOverlay && (
-          <div className="board__top-overlay" ref={topOverlayRef}>
+          <div className="board__top-overlay">
             {topOverlay}
           </div>
         )}
