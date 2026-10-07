@@ -68,7 +68,6 @@ export function useFarkleGame(
   const debugRng = useMemo(() => createDebugRng(), []);
 
   const isHumanTurn = game.turn.playerId === 'human' && game.turn.phase !== 'game-over';
-  const isComputerThinking = game.currentPlayerId === 'computer' && game.turn.phase !== 'game-over';
 
   // Computed for whichever player is currently deciding (human or computer), so the
   // advisor panel can explain the computer's reasoning using the exact same model.
@@ -288,7 +287,6 @@ export function useFarkleGame(
   return {
     game,
     isHumanTurn,
-    isComputerThinking,
     advisorReport,
     computerDecision,
     selectionValidity,

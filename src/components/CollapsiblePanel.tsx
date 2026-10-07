@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { booleanCodec, usePersistedState } from '../hooks/usePersistedState';
 
 export interface CollapsiblePanelProps {
   title: ReactNode;
@@ -10,16 +11,6 @@ export interface CollapsiblePanelProps {
   children: ReactNode;
 }
 
-function readStoredOpen(storageKey: string, defaultOpen: boolean): boolean {
-  try {
-    const stored = window.localStorage.getItem(storageKey);
-    return stored === null ? defaultOpen : stored === 'true';
-  } catch {
-    // localStorage can throw in some privacy modes/environments - just fall back silently.
-    return defaultOpen;
-  }
-}
-
 /**
  * A panel with a clickable header that shows/hides its content. Used for panels that
  * are useful but not always relevant (the scoring guide reference table) or that some
@@ -27,19 +18,9 @@ function readStoredOpen(storageKey: string, defaultOpen: boolean): boolean {
  * covers both cases, with each panel remembering its own open state independently.
  */
 export function CollapsiblePanel({ title, storageKey, defaultOpen, children }: CollapsiblePanelProps) {
-  const [open, setOpen] = useState(() => readStoredOpen(storageKey, defaultOpen));
+  const [open, setOpen] = usePersistedState(storageKey, defaultOpen, booleanCodec);
 
-  const toggle = () => {
-    setOpen((prev) => {
-      const next = !prev;
-      try {
-        window.localStorage.setItem(storageKey, String(next));
-      } catch {
-        // Ignore storage failures - the toggle still works for the rest of this session.
-      }
-      return next;
-    });
-  };
+  const toggle = () => setOpen((prev) => !prev);
 
   return (
     <div className="collapsible-panel">

@@ -57,11 +57,6 @@ export function getRollDistributionStats(diceCount: number): RollDistributionSta
   return stats;
 }
 
-/** Precomputes and returns stats for all dice counts 1-6. */
-export function getAllRollDistributionStats(): RollDistributionStats[] {
-  return [1, 2, 3, 4, 5, 6].map(getRollDistributionStats);
-}
-
 interface WeightedRoll {
   dice: DieValue[];
   /** Number of raw 6^n permutations this sorted combination represents. */

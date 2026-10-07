@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { DEFAULT_TARGET_SCORE } from './game';
 import type { AdvisorReport, ComputerDecision, ComputerSkill } from './game';
 import { useFarkleGame } from './hooks/useFarkleGame';
+import { booleanCodec, enumCodec, usePersistedState } from './hooks/usePersistedState';
 import { GameBoard } from './components/GameBoard';
 import { HeldDiceRail } from './components/HeldDiceRail';
 import { ScoringChart } from './components/ScoringChart';
@@ -17,35 +18,21 @@ import './App.css';
 const PAUSE_AFTER_COMPUTER_TURN_KEY = 'farkle:setting:pause-after-computer-turn';
 const SHOW_ADVICE_KEY = 'farkle:setting:show-advice';
 const COMPUTER_SKILL_KEY = 'farkle:setting:computer-skill';
-const COMPUTER_SKILLS: ComputerSkill[] = ['easy', 'normal', 'hard'];
-
-function readStoredBoolean(key: string, defaultValue: boolean): boolean {
-  try {
-    const stored = window.localStorage.getItem(key);
-    return stored === null ? defaultValue : stored === 'true';
-  } catch {
-    // localStorage can throw in some privacy modes/environments - just fall back silently.
-    return defaultValue;
-  }
-}
-
-function readStoredComputerSkill(defaultValue: ComputerSkill): ComputerSkill {
-  try {
-    const stored = window.localStorage.getItem(COMPUTER_SKILL_KEY);
-    return stored !== null && (COMPUTER_SKILLS as string[]).includes(stored) ? (stored as ComputerSkill) : defaultValue;
-  } catch {
-    // localStorage can throw in some privacy modes/environments - just fall back silently.
-    return defaultValue;
-  }
-}
+const COMPUTER_SKILL_CODEC = enumCodec<ComputerSkill>(['easy', 'normal', 'hard']);
 
 export default function App() {
   const [targetScore] = useState(DEFAULT_TARGET_SCORE);
-  const [pauseAfterComputerTurn, setPauseAfterComputerTurn] = useState(() =>
-    readStoredBoolean(PAUSE_AFTER_COMPUTER_TURN_KEY, true),
+  const [pauseAfterComputerTurn, setPauseAfterComputerTurn] = usePersistedState(
+    PAUSE_AFTER_COMPUTER_TURN_KEY,
+    true,
+    booleanCodec,
   );
-  const [showAdvice, setShowAdvice] = useState(() => readStoredBoolean(SHOW_ADVICE_KEY, true));
-  const [computerSkill, setComputerSkill] = useState<ComputerSkill>(() => readStoredComputerSkill('hard'));
+  const [showAdvice, setShowAdvice] = usePersistedState(SHOW_ADVICE_KEY, true, booleanCodec);
+  const [computerSkill, setComputerSkill] = usePersistedState<ComputerSkill>(
+    COMPUTER_SKILL_KEY,
+    'hard',
+    COMPUTER_SKILL_CODEC,
+  );
   // Tracks whether any dice have ever been rolled in this game (across every turn), so
   // the board's "Roll to throw the dice" placeholder can be shown only once, at the
   // very start of a new game, rather than reappearing at the start of every turn.
@@ -53,38 +40,8 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  const togglePauseAfterComputerTurn = () => {
-    setPauseAfterComputerTurn((prev) => {
-      const next = !prev;
-      try {
-        window.localStorage.setItem(PAUSE_AFTER_COMPUTER_TURN_KEY, String(next));
-      } catch {
-        // Ignore storage failures - the toggle still works for the rest of this session.
-      }
-      return next;
-    });
-  };
-
-  const toggleShowAdvice = () => {
-    setShowAdvice((prev) => {
-      const next = !prev;
-      try {
-        window.localStorage.setItem(SHOW_ADVICE_KEY, String(next));
-      } catch {
-        // Ignore storage failures - the toggle still works for the rest of this session.
-      }
-      return next;
-    });
-  };
-
-  const changeComputerSkill = (next: ComputerSkill) => {
-    setComputerSkill(next);
-    try {
-      window.localStorage.setItem(COMPUTER_SKILL_KEY, next);
-    } catch {
-      // Ignore storage failures - the setting still works for the rest of this session.
-    }
-  };
+  const togglePauseAfterComputerTurn = () => setPauseAfterComputerTurn((prev) => !prev);
+  const toggleShowAdvice = () => setShowAdvice((prev) => !prev);
 
   const { game, isHumanTurn, advisorReport, computerDecision, selectionValidity, actions, canBank } = useFarkleGame(
     targetScore,
@@ -383,7 +340,7 @@ export default function App() {
           showAdvice={showAdvice}
           onToggleShowAdvice={toggleShowAdvice}
           computerSkill={computerSkill}
-          onChangeComputerSkill={changeComputerSkill}
+          onChangeComputerSkill={setComputerSkill}
           onClose={() => setShowSettings(false)}
         />
       )}
