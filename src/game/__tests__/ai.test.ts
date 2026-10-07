@@ -42,15 +42,30 @@ describe('computerDecideMove', () => {
     expect(decision.action).toBe('bank');
   });
 
-  it('injects a mistake at easy skill when rng rolls below the mistake rate, flipping the action but keeping the dice selection', () => {
-    const dice: DieValue[] = [1, 1, 1, 1, 1, 2];
+  it('injects a mistake at easy skill when rng rolls below the mistake rate, flipping a genuinely close bank/continue call', () => {
+    // Close call: banking 500 (EV 500) vs continuing (EV ~473.9) - within the "close
+    // call" margin a mistake is allowed to flip, unlike a lopsided/obvious decision.
+    const dice: DieValue[] = [2, 5, 6, 5, 5, 4];
     const optimal = computerDecideMove(dice, 0, computerPlayer, 10000, undefined, false, 'hard');
     const alwaysMistakeRng = () => 0;
 
     const decision = computerDecideMove(dice, 0, computerPlayer, 10000, undefined, false, 'easy', alwaysMistakeRng);
 
+    expect(optimal.action).toBe('bank');
     expect(decision.action).not.toBe(optimal.action);
     expect(decision.selectedIndices).toEqual(optimal.selectedIndices);
+  });
+
+  it('never flips an obviously-correct decision into a mistake, even with an rng that would always trigger one', () => {
+    // Lopsided call: a single scoring die (100pts) leaving 5 dice to reroll is an easy
+    // "keep rolling" decision (EV ~393 vs banking 100) - a lower skill should still never
+    // blunder this, only misjudge genuinely close calls (see test above).
+    const dice: DieValue[] = [1, 2, 3, 4, 6, 6];
+    const alwaysMistakeRng = () => 0;
+
+    const decision = computerDecideMove(dice, 0, computerPlayer, 10000, undefined, false, 'easy', alwaysMistakeRng);
+
+    expect(decision.action).toBe('continue');
   });
 
   it('never injects a mistake when rng rolls above the mistake rate', () => {

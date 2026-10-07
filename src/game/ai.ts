@@ -33,6 +33,12 @@ const SKILL_SETTINGS: Record<ComputerSkill, SkillSettings> = {
   hard: { lookaheadDepth: DEFAULT_LOOKAHEAD_DEPTH, mistakeRate: 0 },
 };
 
+/** How close (as a fraction of the larger of the two expected values) banking and
+ *  continuing need to be for a "mistake" to be eligible to flip the decision - keeps
+ *  mistakes looking like plausible misjudgments of a genuinely borderline call, rather
+ *  than ignoring a lopsided EV difference. */
+const CLOSE_CALL_MARGIN = 0.25;
+
 /**
  * Decides the computer opponent's move for the current roll by reusing the same
  * advisor logic shown to the human player: pick the best-EV dice selection, then
@@ -85,8 +91,16 @@ export function computerDecideMove(
 
   // Deliberately second-guess the EV-optimal action for lower skill levels: same dice
   // selection, but the opposite bank/continue call - e.g. banking too cautiously when
-  // continuing was actually better, or pushing on when it should have banked.
-  if (mistakeRate > 0 && rng() < mistakeRate) {
+  // continuing was actually better, or pushing on when it should have banked. Only
+  // applied when the two options are genuinely close in value (within CLOSE_CALL_MARGIN
+  // of each other) - a lower skill should occasionally misjudge a borderline decision,
+  // not blunder away an obviously-correct one (e.g. banking 100 points instead of
+  // continuing with a 400-point expected value), which would just look broken rather
+  // than "weaker".
+  const evMargin = Math.abs(best.bank.expectedValue - best.adjustedContinueExpectedValue);
+  const evScale = Math.max(best.bank.expectedValue, best.adjustedContinueExpectedValue, 1);
+  const isCloseCall = evMargin <= CLOSE_CALL_MARGIN * evScale;
+  if (isCloseCall && mistakeRate > 0 && rng() < mistakeRate) {
     const mistakenAction = best.recommendedAction === 'bank' ? 'continue' : 'bank';
     return {
       selectedIndices: best.candidate.indices,
