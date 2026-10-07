@@ -442,6 +442,10 @@ body {
 .board__die-slot {
   position: absolute;
   display: inline-flex;
+  /* Smooths repositioning when the reserved space for an overlay changes (e.g. the
+   * top banner wrapping to a second line, or its "why?" popover opening/closing) -
+   * dice gently re-settle into the new space instead of jumping there instantly. */
+  transition: top 0.3s ease, left 0.3s ease;
 }
 
 /* The Roll/Bank buttons live right on the board, pinned to the bottom of the felt,
@@ -1010,15 +1014,11 @@ body {
   background: rgba(255, 255, 255, 0.32);
 }
 
-/* Positioned absolutely (rather than in normal flow) so opening it never grows
- * `.board__headline`'s measured height - that height drives how much felt space is
- * reserved for the overlay (see `useOverlayReservePct`), and growing it would shove
- * the dice down the felt. Instead it simply floats over the top of the dice. */
+/* Part of normal document flow (not floated) so opening it grows `.board__top-overlay`'s
+ * measured height, which in turn grows the space reserved for it on the felt (see
+ * `useOverlayReservePct` in GameBoard) - guaranteeing dice are never left underneath it. */
 .board__headline-reasoning-popover {
-  position: absolute;
-  left: 0.5rem;
-  right: 0.5rem;
-  top: calc(100% + 0.4rem);
+  margin: 0.4rem 0.5rem 0;
   z-index: 5;
   padding: 0.5rem 0.65rem;
   background: rgba(4, 12, 8, 0.72);
@@ -1032,6 +1032,13 @@ body {
   /* Also opt back into pointer events (see `.board__top-overlay`) so its text remains
    * selectable rather than click-through to the dice behind it. */
   pointer-events: auto;
+  /* Bounds how much space this can ever claim above the dice - on a short, narrow
+   * screen an unbounded popover (plus the roll/bank button bar below) can demand more
+   * height than the felt even has, leaving no room to keep dice clear of both. Scrolls
+   * instead of growing further. */
+  max-height: 7rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .board__headline-reasoning-popover p {

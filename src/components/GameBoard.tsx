@@ -27,10 +27,10 @@ export interface GameBoardProps {
    *  `useOverlayReservePct`) so live dice never land underneath the buttons. */
   controlsOverlay?: ReactNode;
   /** A small status banner (e.g. "Hot dice!") pinned to the top of the felt. Dice are
-   *  scattered below a fixed reserved height, not dynamically grown to match the
-   *  banner's actual (content-dependent) height, so it's fine - and expected - for a
-   *  taller-than-usual banner (e.g. wrapped text) to overlap/cover dice underneath
-   *  rather than pushing them further down the board. */
+   *  scattered below the banner's actual (measured) height - including its "why?"
+   *  reasoning popover when expanded - so a die is never scattered underneath it or
+   *  left stranded under it after it grows (e.g. wrapped text, or opening the
+   *  reasoning popover). See `useOverlayReservePct`. */
   topOverlay?: ReactNode;
   /** The end-of-turn (Farkle / banked) message, shown as a centered popover on top of
    *  the felt instead of a separate block below the board. It's fine for this to cover
@@ -55,9 +55,31 @@ interface DieLayout {
 const CONTROLS_RESERVED_PCT_FALLBACK = 24;
 const TOP_OVERLAY_RESERVED_PCT_FALLBACK = 12;
 
-/** Extra padding (percentage points) added on top of an overlay's measured height, so
- *  dice never land flush against its edge. */
-const OVERLAY_RESERVE_BUFFER_PCT = 4;
+/** Ceilings on how much of the felt's height an overlay may ever claim, so a single
+ *  die or two is never asked to squeeze into literally zero space. The top banner
+ *  gets a much higher ceiling than the bottom controls bar: its content (especially
+ *  the reasoning popover, bounded but still sizeable - see `.board__headline-
+ *  reasoning-popover`) can legitimately need most of a short, narrow felt, and unlike
+ *  the bottom bar it's the one dice must never end up underneath (see `applyReserve`'s
+ *  `topMarginPct`, enforced only against this boundary). */
+const CONTROLS_RESERVE_PCT_MAX = 70;
+const TOP_OVERLAY_RESERVE_PCT_MAX = 92;
+
+/** Small extra clearance (in px, converted to a percentage of the felt's actual
+ *  measured height) added on top of an overlay's measured height, just for a touch of
+ *  breathing room beyond its edge. The bigger concern - a die's own footprint poking
+ *  back over that edge, since each die is positioned by its *center* - is handled
+ *  separately per-die (see `DIE_FOOTPRINT_RADIUS_PX`/`applyReserve`), because that
+ *  depends on how compressed the usable area ends up, not just the overlay's size. */
+const OVERLAY_RESERVE_BUFFER_PX = 8;
+
+/** Half the diagonal of the largest (44px) die once rotated up to 35deg - i.e. the
+ *  furthest any point of a settled die can extend from its own center point. Used to
+ *  keep every die's full footprint (not just its center) clear of reserved overlay
+ *  space, regardless of how the usable area happens to get rescaled. Deliberately
+ *  sized for the larger desktop die so it's still safely conservative at the smaller
+ *  (36px) mobile size. */
+const DIE_FOOTPRINT_RADIUS_PX = 32;
 
 /** Measures `overlayRef`'s rendered height as a percentage of `feltRef`'s height,
  *  live, so the dice-reserved area always matches the actual overlay - which varies in
@@ -68,6 +90,7 @@ function useOverlayReservePct(
   overlayRef: React.RefObject<HTMLDivElement | null>,
   active: boolean,
   fallbackPct: number,
+  maxPct: number,
 ): number {
   const [pct, setPct] = useState(fallbackPct);
 
@@ -81,8 +104,9 @@ function useOverlayReservePct(
       const feltHeight = felt.getBoundingClientRect().height;
       const overlayHeight = overlay.getBoundingClientRect().height;
       if (feltHeight === 0) return;
-      const measured = (overlayHeight / feltHeight) * 100 + OVERLAY_RESERVE_BUFFER_PCT;
-      setPct(Math.min(70, Math.max(fallbackPct, measured)));
+      const bufferPct = (OVERLAY_RESERVE_BUFFER_PX / feltHeight) * 100;
+      const measured = (overlayHeight / feltHeight) * 100 + bufferPct;
+      setPct(Math.min(maxPct, Math.max(fallbackPct, measured)));
     };
 
     measure();
@@ -91,9 +115,30 @@ function useOverlayReservePct(
     observer.observe(felt);
     observer.observe(overlay);
     return () => observer.disconnect();
-  }, [active, feltRef, overlayRef, fallbackPct]);
+  }, [active, feltRef, overlayRef, fallbackPct, maxPct]);
 
   return active ? pct : 0;
+}
+
+/** Tracks `ref`'s rendered pixel height live, so percentage-based sizing elsewhere
+ *  (e.g. converting `DIE_FOOTPRINT_RADIUS_PX` into a felt-relative percentage) stays
+ *  correct across viewport widths and resizes rather than assuming one fixed size. */
+function useMeasuredHeightPx(ref: React.RefObject<HTMLDivElement | null>): number {
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const measure = () => setHeight(el.getBoundingClientRect().height);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  return height;
 }
 
 interface RawDieLayout {
@@ -145,15 +190,32 @@ function layoutDice(count: number): RawDieLayout[] {
 /** Compresses a raw layout's vertical positions into the space left over after
  *  reserving `reserveTopPct`/`reserveBottomPct` for overlays - a pure rescale, with no
  *  randomization, so it can safely re-run whenever the reserved space changes without
- *  shuffling any die into a different cell. */
-function applyReserve(raw: RawDieLayout[], reserveTopPct: number, reserveBottomPct: number): DieLayout[] {
+ *  shuffling any die into a different cell.
+ *
+ *  `topMarginPct` only guards the *top* boundary (not the bottom) deliberately: the
+ *  top banner is the one that can grow tall enough to cover a die's whole center point
+ *  (e.g. the reasoning popover expanding on a short, narrow screen) and is the one
+ *  users read, so it gets a firm guarantee. The bottom controls bar is just the
+ *  roll/bank buttons - on the same cramped screens there usually isn't room to keep
+ *  a die's full footprint clear of *both* bars at once, so only the top is enforced
+ *  (matching the specific "a die ends up under the banner" bug this guards against). */
+function applyReserve(
+  raw: RawDieLayout[],
+  reserveTopPct: number,
+  reserveBottomPct: number,
+  topMarginPct: number,
+): DieLayout[] {
   const usableHeightPct = 100 - reserveTopPct - reserveBottomPct;
-  return raw.map((pos) => ({
-    leftPct: pos.leftPct,
-    topPct: reserveTopPct + pos.topPctRaw * (usableHeightPct / 100),
-    rotate: pos.rotate,
-    throwX: pos.throwX,
-  }));
+  const minTopPct = reserveTopPct + topMarginPct;
+  return raw.map((pos) => {
+    const rawTopPct = reserveTopPct + pos.topPctRaw * (usableHeightPct / 100);
+    return {
+      leftPct: pos.leftPct,
+      topPct: Math.max(minTopPct, rawTopPct),
+      rotate: pos.rotate,
+      throwX: pos.throwX,
+    };
+  });
 }
 
 /**
@@ -175,20 +237,33 @@ export function GameBoard({
   popover,
 }: GameBoardProps) {
   const feltRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const controlsOverlayRef = useRef<HTMLDivElement>(null);
+  const topOverlayRef = useRef<HTMLDivElement>(null);
   const reserveBottomPct = useOverlayReservePct(
     feltRef,
-    overlayRef,
+    controlsOverlayRef,
     Boolean(controlsOverlay),
     CONTROLS_RESERVED_PCT_FALLBACK,
+    CONTROLS_RESERVE_PCT_MAX,
   );
-  // Unlike the bottom controls bar, the top banner's reserved space is intentionally
-  // fixed rather than growing with its measured height: its text length varies a lot
-  // (one line vs. wrapping to two), and growing the reserve to match would keep
-  // shoving dice further down every time it wraps. Instead it stays a fixed height and
-  // simply overlays (z-index) whatever dice end up underneath it when it's taller than
-  // usual - see `.board__top-overlay`.
-  const reserveTopPct = topOverlay ? TOP_OVERLAY_RESERVED_PCT_FALLBACK : 0;
+  // Measured live (see `useOverlayReservePct`) rather than a fixed guess, so dice are
+  // never left scattered underneath the banner whatever its actual height turns out to
+  // be - including the "why?" reasoning popover, which is part of normal document flow
+  // (not floated) specifically so opening it grows this measurement too. Already-
+  // settled dice smoothly re-settle into the newly-shrunk space instead of jumping
+  // (see the `top`/`left` transition on `.board__die-slot`).
+  const reserveTopPct = useOverlayReservePct(
+    feltRef,
+    topOverlayRef,
+    Boolean(topOverlay),
+    TOP_OVERLAY_RESERVED_PCT_FALLBACK,
+    TOP_OVERLAY_RESERVE_PCT_MAX,
+  );
+
+  // Converts `DIE_FOOTPRINT_RADIUS_PX` into a felt-relative percentage so it scales
+  // correctly across viewport widths, for clamping each die clear of reserved space.
+  const feltHeightPx = useMeasuredHeightPx(feltRef);
+  const dieMarginPct = feltHeightPx > 0 ? (DIE_FOOTPRINT_RADIUS_PX / feltHeightPx) * 100 : 0;
 
   // The randomized cell/jitter/rotation assignment, computed once per roll (keyed by
   // rollId) so re-renders - including the reserved-space recalculation below settling
@@ -205,8 +280,8 @@ export function GameBoard({
   // `reserveTopPct`/`reserveBottomPct` change (e.g. once an overlay's real height is
   // measured) without disturbing any die's assigned cell.
   const layout = useMemo(
-    () => applyReserve(rawLayout, reserveTopPct, reserveBottomPct),
-    [rawLayout, reserveTopPct, reserveBottomPct],
+    () => applyReserve(rawLayout, reserveTopPct, reserveBottomPct, dieMarginPct),
+    [rawLayout, reserveTopPct, reserveBottomPct, dieMarginPct],
   );
 
   const liveDice = dice
@@ -249,13 +324,13 @@ export function GameBoard({
         })}
 
         {controlsOverlay && (
-          <div className="board__controls-overlay" ref={overlayRef}>
+          <div className="board__controls-overlay" ref={controlsOverlayRef}>
             {controlsOverlay}
           </div>
         )}
 
         {topOverlay && (
-          <div className="board__top-overlay">
+          <div className="board__top-overlay" ref={topOverlayRef}>
             {topOverlay}
           </div>
         )}
