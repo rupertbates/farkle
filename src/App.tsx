@@ -102,15 +102,21 @@ export default function App() {
   const continueBtnLabel = nextTurnIsHuman ? 'Roll 6 dice' : 'Continue';
   const continueBtnClassName = nextTurnIsHuman ? 'btn btn--primary' : 'btn';
 
-  let computerStatus: { icon: string; text: string } = { icon: '🤖', text: 'Computer is playing…' };
+  let computerStatus: { icon: string; text: string; isHotDice: boolean } = {
+    icon: '🤖',
+    text: 'Computer is playing…',
+    isHotDice: false,
+  };
   if (!isHumanTurn && !isGameOver) {
     if (turn.phase === 'awaiting-roll') {
-      computerStatus = { icon: '🎲', text: 'Computer is about to roll…' };
+      computerStatus = turn.isHotDice
+        ? { icon: '🔥', text: 'Computer got Hot Dice! Rolling a fresh set of 6…', isHotDice: true }
+        : { icon: '🎲', text: 'Computer is about to roll…', isHotDice: false };
     } else if (turn.phase === 'awaiting-selection') {
       computerStatus =
         turn.selectedIndices.length > 0
-          ? { icon: '🔒', text: 'Computer is locking in its dice…' }
-          : { icon: '🤔', text: 'Computer is deciding…' };
+          ? { icon: '🔒', text: 'Computer is locking in its dice…', isHotDice: false }
+          : { icon: '🤔', text: 'Computer is deciding…', isHotDice: false };
     }
   }
 
@@ -231,7 +237,12 @@ export default function App() {
     const text = best.isHotDice ? `Hot dice! ${best.candidate.label}${actionSuffix}` : `${best.candidate.label}${actionSuffix}`;
     overlayContent = { icon: best.isHotDice ? '🔥' : actionIcon, text, isHotDice: best.isHotDice, reasoning };
   } else if (!isHumanTurn && !isGameOver && turn.phase !== 'farkled' && turn.phase !== 'turn-banked') {
-    overlayContent = { icon: computerStatus.icon, text: computerStatus.text, isHotDice: false, reasoning: '' };
+    overlayContent = {
+      icon: computerStatus.icon,
+      text: computerStatus.text,
+      isHotDice: computerStatus.isHotDice,
+      reasoning: '',
+    };
   }
 
   // Keeps the headline's last content (and, critically, the board space reserved for
