@@ -30,7 +30,7 @@ export default function App() {
   const [showAdvice, setShowAdvice] = usePersistedState(SHOW_ADVICE_KEY, true, booleanCodec);
   const [computerSkill, setComputerSkill] = usePersistedState<ComputerSkill>(
     COMPUTER_SKILL_KEY,
-    'hard',
+    'normal',
     COMPUTER_SKILL_CODEC,
   );
   // Tracks whether any dice have ever been rolled in this game (across every turn), so
