@@ -19,6 +19,7 @@ const PAUSE_AFTER_COMPUTER_TURN_KEY = 'farkle:setting:pause-after-computer-turn'
 const SHOW_ADVICE_KEY = 'farkle:setting:show-advice';
 const COMPUTER_SKILL_KEY = 'farkle:setting:computer-skill';
 const COMPUTER_SKILL_CODEC = enumCodec<ComputerSkill>(['easy', 'normal', 'hard']);
+const RISK_AWARENESS_KEY = 'farkle:setting:risk-awareness';
 
 export default function App() {
   const [targetScore] = useState(DEFAULT_TARGET_SCORE);
@@ -33,6 +34,7 @@ export default function App() {
     'normal',
     COMPUTER_SKILL_CODEC,
   );
+  const [riskAwareness, setRiskAwareness] = usePersistedState(RISK_AWARENESS_KEY, false, booleanCodec);
   // Tracks whether any dice have ever been rolled in this game (across every turn), so
   // the board's "Roll to throw the dice" placeholder can be shown only once, at the
   // very start of a new game, rather than reappearing at the start of every turn.
@@ -42,11 +44,12 @@ export default function App() {
 
   const togglePauseAfterComputerTurn = () => setPauseAfterComputerTurn((prev) => !prev);
   const toggleShowAdvice = () => setShowAdvice((prev) => !prev);
+  const toggleRiskAwareness = () => setRiskAwareness((prev) => !prev);
 
   const { game, isHumanTurn, advisorReport, computerDecision, selectionValidity, actions, canBank } = useFarkleGame(
     targetScore,
     undefined,
-    undefined,
+    riskAwareness,
     pauseAfterComputerTurn,
     computerSkill,
   );
@@ -358,6 +361,8 @@ export default function App() {
           onToggleShowAdvice={toggleShowAdvice}
           computerSkill={computerSkill}
           onChangeComputerSkill={setComputerSkill}
+          riskAwareness={riskAwareness}
+          onToggleRiskAwareness={toggleRiskAwareness}
           onClose={() => setShowSettings(false)}
         />
       )}

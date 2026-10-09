@@ -45,6 +45,23 @@ logic itself.
   - Exposed via a 3-way segmented control ("Easy / Normal / Hard") in the "⚙️ Settings"
     overlay, persisted to `localStorage` under `farkle:setting:computer-skill`.
 
+- **Take game state into account (risk-aware advice)** - `useFarkleGame(targetScore,
+  computerMoveDelayMs, riskAwareness)` (boolean, defaults to `false`). When enabled, both
+  the human advisor panel and the computer's own decision-making nudge the
+  bank-vs-continue recommendation based on the race to `targetScore`:
+  - Pushes harder (favors continuing) when significantly behind the opponent's score.
+  - Plays it safer (favors banking) when close to the winning score, even if continuing
+    has a slightly better raw expected value.
+  - Implementation: `applyRiskAwareness()` in `src/game/advisor.ts`. Pure EV math is
+    unchanged - this only shifts the bank/continue decision boundary and is fully opt-in,
+    so existing pure-EV behavior is untouched when the flag is off.
+  - Current heuristic constants (catch-up bonus capped at 10% of target score, safety
+    penalty of 8% of target score within the last 5% of target remaining) are a first
+    pass and may need tuning.
+  - Exposed via a "🎯 Take game state into account" checkbox in the "⚙️ Settings" overlay,
+    persisted to `localStorage` under `farkle:setting:risk-awareness`, off by default to
+    preserve the original pure-EV behavior.
+
 ## Ready to expose
 
 These are fully implemented and threaded through `useFarkleGame`, just not yet exposed
@@ -58,22 +75,6 @@ to the player via any UI control. `App.tsx` currently hardcodes their defaults.
   - Suggested UI: a slider or preset buttons (e.g. "Slow / Normal / Fast / Instant").
   - Note: "Instant" (delay ≈ 0) should still work since it's just a `setTimeout` value,
     but hasn't been explicitly tested at 0ms.
-
-- **Risk-aware advice** - `useFarkleGame(targetScore, computerMoveDelayMs, riskAwareness)`
-  (boolean, defaults to `false`). When enabled, both the human advisor panel and the
-  computer's own decision-making nudge the bank-vs-continue recommendation based on the
-  race to `targetScore`:
-  - Pushes harder (favors continuing) when significantly behind the opponent's score.
-  - Plays it safer (favors banking) when close to the winning score, even if continuing
-    has a slightly better raw expected value.
-  - Implementation: `applyRiskAwareness()` in `src/game/advisor.ts`. Pure EV math is
-    unchanged - this only shifts the bank/continue decision boundary and is fully opt-in,
-    so existing pure-EV behavior is untouched when the flag is off.
-  - Current heuristic constants (catch-up bonus capped at 10% of target score, safety
-    penalty of 8% of target score within the last 5% of target remaining) are a first
-    pass and may need tuning once this is player-facing.
-  - Suggested UI: a simple toggle, e.g. "Risk-aware advice" or "Consider game state", off
-    by default to preserve the original pure-EV behavior.
 
 ## Not yet implemented (ideas only)
 

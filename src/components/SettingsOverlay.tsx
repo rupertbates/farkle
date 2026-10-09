@@ -13,6 +13,8 @@ export interface SettingsOverlayProps {
   onToggleShowAdvice: () => void;
   computerSkill: ComputerSkill;
   onChangeComputerSkill: (skill: ComputerSkill) => void;
+  riskAwareness: boolean;
+  onToggleRiskAwareness: () => void;
   onClose: () => void;
 }
 
@@ -24,6 +26,8 @@ export function SettingsOverlay({
   onToggleShowAdvice,
   computerSkill,
   onChangeComputerSkill,
+  riskAwareness,
+  onToggleRiskAwareness,
   onClose,
 }: SettingsOverlayProps) {
   return (
@@ -62,6 +66,17 @@ export function SettingsOverlay({
               <span className="settings__toggle-hint">
                 Show the advisor's recommendation banner at the top of the board on your turn. Turn off to play
                 without any hints.
+              </span>
+            </span>
+          </label>
+          <label className="settings__toggle">
+            <input type="checkbox" checked={riskAwareness} onChange={onToggleRiskAwareness} />
+            <span>
+              🎯 Take game state into account
+              <span className="settings__toggle-hint">
+                Nudge advice (for you and the computer) based on the race to the target score - pushing harder to
+                continue when behind, and playing safer by banking sooner when close to winning - instead of always
+                recommending the pure expected-value-maximizing play.
               </span>
             </span>
           </label>
